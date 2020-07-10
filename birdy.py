@@ -1,12 +1,5 @@
 #! /usr/bin/env python3
 
-# Software Name
-soft_name = "Birdy"
-soft_tag  = "a simple program to backup and restore files"
-
-# Version
-soft_vers = "beta 0.34"
-
 import csv
 import itertools
 import os
@@ -19,6 +12,13 @@ import sys
 import tarfile              ## to create tar archives
 import time                 ## for sleep pauses and time stamps
 import readline             ## avoid junk characters for backspace
+
+# Software Name
+soft_name = "Birdy"
+soft_tag  = "a simple program to backup and restore files"
+
+# Version
+soft_vers = "beta 0.3.5"
 
 ## List of variables
 distro          = ''
@@ -380,7 +380,7 @@ if usr_inp != 'e' :
     ## For downloads:
     ## Copy the LOCAL target files to the local_safety folder in /tmp
     def make_local_safe_func():
-        subprocess.run(['rsync', '-r', '-p', '-t', '-E', '--progress', (os.path.join(user_home, rel_path, item)), (os.path.join(local_safe))])
+        subprocess.run(['rsync', '-r', '-p', '-t', '-E', (os.path.join(user_home, rel_path, item)), (os.path.join(local_safe))])
         #shutil.copytree((os.path.join(user_home, rel_path, item)), (os.path.join(local_safe, item)))
         os.rename((os.path.join(local_safe, item)), (os.path.join(local_safe, (item + '_' + str(time.monotonic()))))) 
     
