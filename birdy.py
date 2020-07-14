@@ -48,24 +48,24 @@ soft_vers = "0.4.0"
 # backup_path     = ''
 
 # Lists
-key_list = []
-system_list = []
-list10_1 = []
-list10_2 = []
-list20_1 = []
-list20_2 = []
-list30_1 = []
-list30_2 = []
-list40_1 = []
-list40_2 = []
-list50_1 = []
-list50_2 = []
-list60_1 = []
-list60_2 = []
-list70_1 = []
-list70_2 = []
-list200_1 = []
-list200_2 = []
+# key_list = []
+# system_list = []
+# list10_1 = []
+# list10_2 = []
+# list20_1 = []
+# list20_2 = []
+# list30_1 = []
+# list30_2 = []
+# list40_1 = []
+# list40_2 = []
+# list50_1 = []
+# list50_2 = []
+# list60_1 = []
+# list60_2 = []
+# list70_1 = []
+# list70_2 = []
+# list200_1 = []
+# list200_2 = []
 
 # List of colors
 W = '\033[0m'  # white (normal)
@@ -81,7 +81,6 @@ distro = distro.strip()
 sysname = (socket.gethostname())
 sysname = sysname.split(".")
 sysname = (sysname[0]).strip()
-sysname = sysname.strip()
 
 # Define the local directories
 global user_home
@@ -94,103 +93,376 @@ remote_forklift = os.path.join(remote_root, 'Linux_Forklift')
 remote_sysname = os.path.join(remote_root, 'Linux_Backups', sysname)
 
 # Safety folders
-back_safe = '/tmp/backup_safety'
-local_safe = '/tmp/local_safety'
+back_safe = os.path.join("/tmp/backup_safety")
+local_safe = os.path.join("/tmp/local_safety")
 
 # The birdy config file
 systemlist_src = os.path.join(user_home, ".config", "birdy", "system_list.csv")
 
-system_list_working = []
+# Lists
+system_list_full = []
+system_list_pruned = []
+system_list_basic = []
+system_list_dolly = []
+system_list_fork = []
+
+enc_list = []
+unenc_list = []
+dolly_list = []
+fork_list = []
+
+key_enc_pretty = []
+key_unenc_pretty = []
+key_dolly_pretty = []
+key_fork_pretty = []
+
+# Dictionaries
+enc_dict = {}
+unenc_dict = {}
+dolly_dict = {}
+fork_dict = {}
+
 
 # Make a python list of the external list
-def make_list_func():
+def read_system_list_func():
     # os.system('clear')
     with open(systemlist_src) as system_list:
         reader = csv.reader(system_list, delimiter=',')
         for row in itertools.islice(reader, 1, None, None):
-            system_list_working.append(row)
+            system_list_full.append(row)
 
 
-make_list_func()
-item_list = []
-item_dict = {}
-for row in system_list_working:
-    if row[7] == "user_home":
-        item_path = os.path.join(user_home, row[8], row[1])
+def prune_system_list_func():
+    item_list = []
+    for row in system_list_full:
+        if row[7] == "user_home":
+            item_path = os.path.join(user_home, row[8], row[1])
+        else:
+            item_path = os.path.join(row[7], row[8], row[1])
+        if os.path.isfile(item_path) or os.path.isdir(item_path):
+            system_list_pruned.append(row)
+        for row in system_list_pruned:
+            if int(row[2]) < 99:
+                system_list_basic.append(row)
+            if 100 <= int(row[2]) < 200:
+                system_list_dolly.append(row)
+            if 200 <= int(row[2]) < 300:
+                system_list_fork.append(row)
+
+
+
+def make_category_lists_func():
+    for row in system_list_pruned:
+        if int(row[0]) <= 99 and row[4] == "E":
+            enc_list.append(os.path.join(row[8], row[1]))
+            enc_list.sort()
+        if int(row[0]) <= 99 and row[4] == "n":
+            unenc_list.append(os.path.join(row[8], row[1]))
+            unenc_list.sort()
+        if 100 <= int(row[0]) < 200 and row[5] == "L":
+            dolly_list.append(os.path.join(row[8], row[1]))
+            dolly_list.sort()
+        if 200 <= int(row[0]) < 300 and row[6] == "F":
+            fork_list.append(os.path.join(row[8], row[1]))
+            fork_list.sort()
+
+
+def make_dicts_for_input_func():
+    key_1 = 1
+    key_50 = 50
+    key_100 = 100
+    key_200 = 200
+    for i in enc_list:
+        enc_dict.update({key_1:i})
+        key_1 += 1
+    for i in unenc_list:
+        unenc_dict.update({key_50:i})
+        key_50 += 1
+    for i in dolly_list:
+        dolly_dict.update({key_100:i})
+        key_100 += 1
+    for i in fork_list:
+        fork_dict.update({key_200:i})
+        key_200 += 1
+
+
+def make_list_keys_func():
+    key_enc = list(range(1, (1 + len(enc_list))))
+    for i in key_enc:
+        key_enc_pretty.append("[" + str(i) + "]")
+
+    key_unenc = list(range(50, (50 + len(unenc_list))))
+    for i in key_unenc:
+        key_unenc_pretty.append("[" + str(i) + "]")
+
+    key_dolly = list(range(100, (100 + len(dolly_list))))
+    for i in key_dolly:
+        key_dolly_pretty.append("[" + str(i) + "]")
+
+    key_fork = list(range(200, (200 + len(fork_list))))
+    for i in key_fork:
+        key_fork_pretty.append("[" + str(i) + "]")
+
+
+def print_system_list_func():
+    print('{:<35}{:<35}{:<36}{:<}'.format(
+        "Encrypted", "Unencrypted", "Dolly Files", "Forklift Files"))
+    for c1,c2,c3,c4,c5,c6,c7,c8 in itertools.zip_longest(
+            key_enc_pretty,
+            enc_list,
+            key_unenc_pretty,
+            unenc_list,
+            key_dolly_pretty,
+            dolly_list,
+            key_fork_pretty,
+            fork_list,
+            fillvalue=""):
+        print('{:<5}{:<30}{:<5}{:<30}{:<6}{:<30}{:<6}{}'.format(
+            c1, c2, c3, c4, c5, c6, c7, c8))
+
+
+def print_basic_list_func():
+    print('{:<35}{:<30}'.format(
+        "Encrypted", "Unencrypted\n"))
+    for c1,c2,c3,c4 in itertools.zip_longest(
+            key_enc_pretty,
+            enc_list,
+            key_unenc_pretty,
+            unenc_list,
+            fillvalue=""):
+        print('{:<5}{:<30}{:<5}{:<30}'.format(
+            c1, c2, c3, c4))
+
+
+def print_dolly_list_func():
+    print('{:<}'.format(
+        "Dolly Files\n"))
+    for c1,c2 in itertools.zip_longest(
+            key_dolly_pretty,
+            dolly_list,
+            fillvalue=""):
+        print('{:<6}{}'.format(
+            c1, c2))
+
+
+# Create safety directories for local and remote files
+def make_safety_dirs_func():
+    subprocess.run(['mkdir', '-p', (os.path.join('/tmp/local_safety'))])
+    subprocess.run(['mkdir', '-p', (os.path.join('/tmp/backup_safety'))])
+
+
+# Backup functions
+# Create remote directory if needed
+def make_remote_dirs_func():
+    subprocess.run(['mkdir', '-p', (os.path.join(remote_sysname, local_path))])
+    subprocess.run(['mkdir', '-p', (os.path.join(remote_dolly))])
+    subprocess.run(['mkdir', '-p', (os.path.join(remote_forklift))])
+
+## Copy the remote ENCRYPTED target files to the backup_safety folder in /tmp
+# def make_remote_safe_gpg_func():
+#     shutil.copy2((os.path.join(
+#         remote_root, back_base, back_path, local_path, (item + '.tar.bz2.gpg'))), (os.path.join(back_safe, local_path, (item + '.tar.bz2.gpg'))))
+
+
+## Copy the remote ENCRYPTED target files to the backup_safety folder in /tmp
+def make_remote_safe_gpg_func():
+    shutil.copy2((os.path.join(remote_root, back_base, back_path, local_path, (item + '.tar.bz2.gpg'))), (os.path.join(back_safe, local_path)))
+
+
+# ## Copy the remote target files to the backup_safety folder in /tmp
+# def make_remote_safe_func():
+#     subprocess.run(['rsync', '-r', '-p', '-t', '-E', (os.path.join(backup_path, rel_path, item)), (os.path.join(back_safe))])
+#     os.rename((os.path.join(back_safe, item)), (os.path.join(back_safe, (item + '_' + str(time.monotonic()))))) 
+
+
+# ## Create a tar bz2 archive that can be encrypted with gpg
+# def create_tar_func():
+#     tar = tarfile.open(os.path.join(local_safe, (item + '.tar.bz2')), 'w:bz2')
+#     tar.add(os.path.join(user_home, rel_path, item), arcname=item)
+#     tar.close()
+
+
+# ## Encrypt gpg file from tar.bz2 archive
+# def enc_gpg_func():
+#     subprocess.run(['gpg', '--yes', '-o', (os.path.join(local_safe, (item + '.tar.bz2.gpg'))), '-r', pgp_recip, '--encrypt', (os.path.join(local_safe, (item + '.tar.bz2')))])
+
+
+# ## Move archive to remote directory
+# def replace_remote_gpg_func():
+#     subprocess.run(['rsync', '-r', '-p', '-t', '-E', '--progress', (os.path.join(local_safe, (item + '.tar.bz2.gpg'))), (os.path.join(backup_path, rel_path, ''))])
+
+
+# ## Replace remote dir contents from local
+# def replace_remote_dir_func():
+#     subprocess.run(['rsync', '-r', '-p', '-t', '-E', '--progress', (os.path.join(user_home, rel_path, item, '')), (os.path.join(backup_path, rel_path, item, ''))])
+
+
+# ## Replace remote file contents from local
+# def replace_remote_file_func():
+#     subprocess.run(['rsync', '-r', '-p', '-t', '-E', '--progress', (os.path.join(user_home, rel_path, item)), (os.path.join(backup_path, rel_path, item))])
+
+
+# ## Create local directory if needed
+# def make_loc_dirs_func():
+#     subprocess.run(['mkdir', '-p', (os.path.join(user_home, rel_path, item))])
+
+
+# ## For downloads:
+# ## Copy the LOCAL target files to the local_safety folder in /tmp
+# def make_local_safe_func():
+#     subprocess.run(['rsync', '-r', '-p', '-t', '-E', (os.path.join(user_home, rel_path, item)), (os.path.join(local_safe))])
+#     #shutil.copytree((os.path.join(user_home, rel_path, item)), (os.path.join(local_safe, item)))
+#     os.rename((os.path.join(local_safe, item)), (os.path.join(local_safe, (item + '_' + str(time.monotonic()))))) 
+
+
+# ## Decrypt gpg and extract tar.bz2 file
+# def dec_gpg_func():
+#     subprocess.run(['gpg', '--yes', '-o', (os.path.join(back_safe, (item + '.tar.bz2'))), '--decrypt', (os.path.join(backup_path, rel_path, (item + '.tar.bz2.gpg')))])
+
+
+# ## Extract user file from tar.bz2 archive
+# def extract_tar_func():
+#     tar = tarfile.open(os.path.join(back_safe, (item + '.tar.bz2')), 'r:bz2')
+#     tar.extractall(path=(os.path.join(back_safe)))
+#     tar.close()
+
+
+# ## Replace local dir contents from ENCRYPTED backup
+# def replace_local_dir_enc_func():
+#     subprocess.run(['rsync', '-r', '-p', '-t', '-E', '-u', '--delete', '--progress', (os.path.join(back_safe, item, '')), (os.path.join(user_home, rel_path, item, ''))])
+
+
+# ## Replace local dir contents from backup
+# def replace_local_dir_func():
+#     subprocess.run(['rsync', '-r', '-p', '-t', '-E', '-u', '--delete', '--progress', (os.path.join(backup_path, rel_path, item, '')), (os.path.join(user_home, rel_path, item, ''))])
+
+
+# ## Replace local file from ENCRYPTED backup
+# def replace_local_file_enc_func():
+#     subprocess.run(['rsync', '-r', '-p', '-t', '-E', '-u', '--progress', (os.path.join(back_safe, item)), (os.path.join(user_home, rel_path, item))])
+
+
+# ## Replace local file from backup
+# def replace_local_file_func():
+#     subprocess.run(['rsync', '-r', '-p', '-t', '-E', '-u', '--progress', (os.path.join(backup_path, rel_path, item)), (os.path.join(user_home, rel_path, item))])
+
+
+# ## Give the backup file extracted to /tmp a unique name to not interfere with next backup
+# ## MUST be kept separate since this name change would conflict with decrypting and extracting
+# def unique_back_name_func():
+#     os.rename((os.path.join(back_safe, item)), (os.path.join(back_safe, (item + '_' + str(time.monotonic())))))
+
+
+# ## Show the actions being performed
+# def show_actions_enc_func():
+#     print("\nENCRYPTING...")
+#     print(os.path.join(user_home, rel_path, item))
+#     print("to...")
+#     print(os.path.join(backup_path, rel_path, (item + '.tar.bz2.gpg')))
+
+
+# def show_actions_dec_func():
+#     print("\nDECRYPTING...")
+#     print(os.path.join(backup_path, rel_path, (item + '.tar.bz2.gpg')))
+#     print("to...")
+#     print(os.path.join(user_home, rel_path, item))
+
+
+# def show_actions_up_func():
+#     print("\ncopying...")
+#     print(os.path.join(user_home, rel_path, item))
+#     print("to...")
+#     print(os.path.join(backup_path, rel_path, item))
+
+
+# def show_actions_dn_func():
+#     print("\ncopying...")
+#     print(os.path.join(backup_path, rel_path, item))
+#     print("to...")
+#     print(os.path.join(user_home, rel_path, item))
+
+
+# ## Show the option to do more work or exit the program
+# def do_more_func():
+#     do_more=input("\nContinue? y/n? ")
+#     if do_more == 'y' or do_more == 'Y':
+#         os.system('clear')
+#     else:
+#         sys.exit()
+
+# Let's get started
+os.system('clear')
+print("\nWelcome to " + str(soft_name) + " " + str(soft_vers)\
+      + " - " + str(soft_tag) + ".")
+
+if sysname == '':
+    print("\nCan't find system name...\n")
+    sysname = input("Please enter a system name: ")
+    if sysname == '':
+        print("\nSystem needs a name...")
+        exit(1)
     else:
-        item_path = os.path.join(row[7], row[8], row[1])
-    if os.path.isfile(item_path) or os.path.isdir(item_path):
-        item_dict.update({row[0]:row[1]})
-        item_list.append(row)
+        print("\nThank you, this", O+ distro +W, "system will use system name", O+ sysname +W, "\n")
+else:
+    print("\nThis distro is", O+ distro +W, "and the system name is", O+ sysname +W)
 
-dolly_list = []
-forklift_list = []
-enc_list = []
-unenc_list = []
+# Check for backup folder matching current system name
+if os.path.exists(remote_sysname):
+    print("\nFound matching backup directory:", remote_sysname)
+else:
+    print("\nNo backup directory called " + str(sysname) + ", create it? y/n")
+    make_dir = input("")
+    if make_dir == 'y' or make_dir == 'Y':
+        print("\nCreated ", remote_sysname)
+        os.mkdir(remote_sysname)
+    else:
+        print("It can't be blank")
+        exit(1)
 
-for row in item_list:
-    if int(row[0]) <= 99 and row[4] == "E":
-        enc_list.append("[" + row[0] + "] " + row[1])
-    if int(row[0]) <= 99 and row[4] == "n":
-        unenc_list.append("[" + row[0] + "] " + row[1])
-    if 100 <= int(row[0]) < 200 and row[5] == "L":
-        dolly_list.append("[" + row[0] + "] " + row[1])
-    if 200 <= int(row[0]) < 300 and row[6] == "F":
-        forklift_list.append("[" + row[0] + "] " + row[1])
+usr_inp = input("\nOptions:(q)uit the program or\
+    \n\n\t(b)ackup birdy group\
+    \n\t(i)ndividual files\
+    \n\t(r)estore\
+    \n\t(d)olly transfer\
+    \n\t(y)ank from another backup\
+    \n\n\tChoice: ")
 
-print("%-30s %s" % ("\nUnencrypted Files", "Encrypted Files\n"))
-for c1, c2 in itertools.zip_longest(unenc_list, enc_list, fillvalue=''):
-    print('{:<30}{:<}'.format(c1,c2))
+if usr_inp in ["B","b"]:
+    print("")
+    read_system_list_func()
+    prune_system_list_func()
+    make_category_lists_func()
+    make_list_keys_func()
+    print_basic_list_func()
 
-# print("%-30s %s" % ("\nDolly Files", "Forklift Files\n"))
-# for c1, c2 in itertools.zip_longest(dolly_list, forklift_list, fillvalue=''):
-#     print("%-30s %s" % (c1, c2))
+    backup_choice = input("\nBack up all birdy files? Y/n ")
+    if backup_choice not in ["Y", "y"]:
+        exit(0)
+    else:
+        print("YES")
+        make_safety_dirs_func()
+        for row in system_list_basic:
+            unused_key = row[0]
+            item       = row[1]
+            category   = row[2]
+            dorf       = row[3]
+            enc        = row[4]
+            dolly      = row[5]
+            fork       = row[6]
+            local_base = row[7]
+            local_path = row[8]
+            back_base  = row[9]
+            back_path  = row[10]
+
+            if back_path == "sysname":
+                back_path = remote_sysname
+
+            make_remote_dirs_func()
+
+            if dorf == "E":
+                make_remote_safe_gpg_func()
 
 
-
-
-# for row in enc_list:
-#     print(row)
-
-
-# print(dolly_list)
-# for a,b,c in zip(enc_list_left, enc_list_left, enc_list_left):
-#     print('{:<}{:<}{:<}'.format(a,b,c))
-
-
-# for key,item in item_dict.items():
-#     print(" "*8 + "[" + str(key) + "] " + item)
-
-# for key, item in item_dict.items():
-#     print("".join(key).ljust(4), item)
-
-# dolly_list = []
-# forklift_list = []
-# enc_list = []
-# unenc_list = []
-# for key, item in item_dict.items():
-#     if 
-#     yomama.append(key + " " + item)
-# # print(yomama)
-
-# # for a,b,c in zip(yomama[0::3], yomama[1::3], yomama[2::3]):
-# #     print('{:<30}{:<30}{:<}'.format(a,b,c))
-
-# for a,b in zip(yomama, yomama):
-#     print('{:<30}{:<30}'.format(a,b))
-
-        
-        
-#     lengthlist = [len(row[1])]
-#     item_list.append(row[1])
-# col_width = max(lengthlist)
-# for row in system_list_working:
-#     thing = "".join(element.ljust(col_width + 2) for element in itemlist)
-#     print(thing)
-
-# for row in system_list_working:
-#     print(row[1], " " * col_width, row[7])
-    # print(row[1], col_width, row[7], row[8], row[9])
 
 
 
@@ -205,11 +477,6 @@ for c1, c2 in itertools.zip_longest(unenc_list, enc_list, fillvalue=''):
 
 
     
-# # Create safety directories for intermediate steps
-# def make_safety_dirs_func():
-#     subprocess.run(['mkdir', '-p', (os.path.join('/tmp/local_safety'))])
-#     subprocess.run(['mkdir', '-p', (os.path.join('/tmp/backup_safety'))])
-
 
 # # Create remote directory if needed
 # def make_remote_dirs_func():
@@ -221,6 +488,14 @@ for c1, c2 in itertools.zip_longest(unenc_list, enc_list, fillvalue=''):
 # def make_loc_dirs_func():
 #     subprocess.run(['mkdir', '-p', (os.path.join(user_home, rel_path, item))])
 
+
+
+
+
+
+
+
+    
 # ## For uploads:
 # ## Copy the remote ENCRYPTED target files to the backup_safety folder in /tmp
 # def make_remote_safe_gpg_func():
