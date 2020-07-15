@@ -1,18 +1,41 @@
 #! /usr/bin/env python3
 
+# MIT License
+
+# Copyright (c) 2020 afhpayne
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# 79 spaces-------------------------------------------------------------------|
 import csv
+import glob
 import itertools
 import os
 from pathlib import Path    ## to use environment variables
 import platform             ## to get platform name
+import readline             ## avoid junk characters for backspace
 import shutil               ## to perform file operations
 import socket               ## to get host name
 import subprocess           ## to invoke bash commands
 import sys
 import tarfile              ## to create tar archives
 import time                 ## for sleep pauses and time stamps
-import readline             ## avoid junk characters for backspace
-import glob
 
 # Software Name
 soft_name = "Birdy"
@@ -21,27 +44,7 @@ soft_tag  = "a simple program to backup and restore files"
 # Version
 soft_vers = "0.4.0"
 
-# Lists
-# key_list = []
-# system_list = []
-# list10_1 = []
-# list10_2 = []
-# list20_1 = []
-# list20_2 = []
-# list30_1 = []
-# list30_2 = []
-# list40_1 = []
-# list40_2 = []
-# list50_1 = []
-# list50_2 = []
-# list60_1 = []
-# list60_2 = []
-# list70_1 = []
-# list70_2 = []
-# list200_1 = []
-# list200_2 = []
-
-# List of colors
+# Colors
 W = '\033[0m'  # white (normal)
 O = '\033[33m' # orange
 G = '\033[92m' # light green
@@ -70,13 +73,14 @@ remote_sysname = os.path.join(remote_root, 'Linux_Backups', sysname)
 back_safe = os.path.join("/tmp/backup_safety")
 local_safe = os.path.join("/tmp/local_safety")
 
-# The birdy config file
+# Birdy config file
 systemlist_src = os.path.join(user_home, ".config", "birdy", "system_list.csv")
 
 # Birdy pgp_email
-with open(os.path.join(user_home, '.config', 'birdy', 'pgp_email.txt'), 'r') as pgp_recip:
+with open(
+        os.path.join(
+            user_home, '.config', 'birdy', 'pgp_email.txt'), 'r') as pgp_recip:
     pgp_recip = pgp_recip.read().strip()
-
 
 # Lists
 system_list_full = []
@@ -84,6 +88,9 @@ system_list_pruned = []
 system_list_basic = []
 system_list_dolly = []
 system_list_fork = []
+
+restore_list = []
+restore_list_pruned = []
 
 enc_list = []
 unenc_list = []
@@ -96,13 +103,9 @@ key_dolly_pretty = []
 key_fork_pretty = []
 
 # Dictionaries
-enc_dict = {}
-unenc_dict = {}
-dolly_dict = {}
-fork_dict = {}
+syslist_dict = {}
 
-
-# Make a python list of the external list
+# Make a python list from the CSV config
 def read_system_list_func():
     # os.system('clear')
     with open(systemlist_src) as system_list:
@@ -129,6 +132,23 @@ def prune_system_list_func():
             system_list_fork.append(row)
 
 
+def prune_restore_list_func():
+    for row in system_list_full:
+        if row[7] == "user_home":
+            item_path = os.path.join(remote_sysname, row[8], row[1])
+        else:
+            item_path = os.path.join(remote_sysname, row[7], row[8], row[1])
+        if os.path.isfile(item_path) or os.path.isdir(item_path):
+            restore_list_pruned.append(row)
+    print(restore_list_pruned)
+    # for row in system_list_pruned:
+    #     if int(row[0]) < 99:
+    #         system_list_basic.append(row)
+    #     if 100 <= int(row[0]) < 200:
+    #         system_list_dolly.append(row)
+    #     if 200 <= int(row[0]) < 300:
+    #         system_list_fork.append(row)
+
 
 def make_category_lists_func():
     for row in system_list_pruned:
@@ -152,16 +172,24 @@ def make_dicts_for_input_func():
     key_100 = 100
     key_200 = 200
     for i in enc_list:
-        enc_dict.update({key_1:i})
+        i = i.split("/")
+        try:
+            syslist_dict.update({key_1:i[1]})
+        except(IndexError):
+            syslist_dict.update({key_1:i[0]})
         key_1 += 1
     for i in unenc_list:
-        enc_dict.update({key_50:i})
+        i = i.split("/")
+        try:
+            syslist_dict.update({key_50:i[1]})
+        except(IndexError):
+            syslist_dict.update({key_50:i[0]})
         key_50 += 1
     for i in dolly_list:
-        enc_dict.update({key_100:i})
+        syslist_dict.update({key_100:i})
         key_100 += 1
     for i in fork_list:
-        enc_dict.update({key_200:i})
+        syslist_dict.update({key_200:i})
         key_200 += 1
 
 
@@ -232,7 +260,7 @@ def make_safety_dirs_func():
     subprocess.run(['mkdir', '-p', local_safe])
 
 
-# Backup functions
+# BACKUP FUNCTIONS------------------------------------------------------------|
 # Create remote directory if needed
 def make_remote_dirs_func():
     subprocess.run(['mkdir', '-p', (os.path.join(remote_sysname, local_path))])
@@ -284,24 +312,23 @@ def replace_remote_file_func():
                 os.path.join(back_path, local_path, item))])
 
 
+# RESTORE FUNCTIONS ----------------------------------------------------------|
+# Copy the LOCAL target files to the local_safety folder in /tmp
+def make_local_safe_func():
+    subprocess.run(
+        ['rsync', '-r', '-p', '-t', '-E', (
+            os.path.join(user_home, local_path, item)), (
+                os.path.join(local_safe))])
+    os.rename((
+        os.path.join(local_safe, item)), (
+            os.path.join(local_safe, (
+                item + '_' + str(time.monotonic())))))
 
 
-
-
-
-
-    
-# ## Create local directory if needed
-# def make_loc_dirs_func():
-#     subprocess.run(['mkdir', '-p', (os.path.join(user_home, rel_path, item))])
-
-
-# ## For downloads:
-# ## Copy the LOCAL target files to the local_safety folder in /tmp
-# def make_local_safe_func():
-#     subprocess.run(['rsync', '-r', '-p', '-t', '-E', (os.path.join(user_home, rel_path, item)), (os.path.join(local_safe))])
-#     #shutil.copytree((os.path.join(user_home, rel_path, item)), (os.path.join(local_safe, item)))
-#     os.rename((os.path.join(local_safe, item)), (os.path.join(local_safe, (item + '_' + str(time.monotonic()))))) 
+# Create local directory if needed
+def make_loc_dirs_func():
+    subprocess.run(
+        ['mkdir', '-p', (os.path.join(user_home, local_path, item))])
 
 
 # ## Decrypt gpg and extract tar.bz2 file
@@ -444,8 +471,12 @@ if usr_inp in ["B","b"]:
             back_base  = row[9]
             back_path  = row[10]
 
-            if back_path == "sysname":
+            if row[5] == "x" and row[6] == "x":
                 back_path = remote_sysname
+            elif row[5] == "L":
+                back_path = remote_dolly
+            elif row[6] == "F":
+                back_path = remote_forklift
 
             make_remote_dirs_func()
 
@@ -463,7 +494,6 @@ if usr_inp in ["B","b"]:
                 print("Copying... ", item)
                 replace_remote_file_func()
 
-######################################################LEFT OFF HERE
 elif usr_inp in ["I", "i"]:
     print("")
     read_system_list_func()
@@ -473,35 +503,121 @@ elif usr_inp in ["I", "i"]:
     print_system_list_func()
 
     make_dicts_for_input_func()
+    
+    make_safety_dirs_func()
+    make_remote_safe_func()
 
     x = 1
     while x == 1:
-        backup_choice = input("\nPlease enter a number to back up a file: ")
+        backup_choice = input("\nPlease enter a number to BACK UP a file: ")
         if backup_choice in ["Q", "q"]:
             exit(0)
         elif backup_choice.isdigit() is False:
             print("-->", backup_choice, "is not an option")
         elif backup_choice.isdigit() is True:
-            for key,value in enc_dict.items():
+            for key,value in syslist_dict.items():
                 if key == int(backup_choice):
-                    print(value.split("/"))
-                    for row in system_list_basic:
-                        if value in row:
-                            # unused_key = row[0]
-                            # item       = row[1]
-                            # category   = row[2]
-                            # dorf       = row[3]
-                            # enc        = row[4]
-                            # dolly      = row[5]
-                            # fork       = row[6]
-                            # local_base = row[7]
-                            # local_path = row[8]
-                            # back_base  = row[9]
-                            # back_path  = row[10]
+                    for row in system_list_pruned:
+                        if value == row[1]:
+                            unused_key = row[0]
+                            item       = row[1]
+                            category   = row[2]
+                            dorf       = row[3]
+                            enc        = row[4]
+                            dolly      = row[5]
+                            fork       = row[6]
+                            local_base = row[7]
+                            local_path = row[8]
+                            back_base  = row[9]
+                            back_path  = row[10]
                         
-                            # if back_path == "sysname":
-                            #     back_path = remote_sysname
-                            print(row)
+                            if row[5] == "x" and row[6] == "x":
+                                back_path = remote_sysname
+                            elif row[5] == "L":
+                                back_path = remote_dolly
+                            elif row[6] == "F":
+                                back_path = remote_forklift
+
+                            make_remote_dirs_func()
+
+                            if enc == "E":
+                                print("Compressing... ", item)
+                                create_tar_func()
+                                print("Encrypting...")
+                                enc_gpg_func()
+                                print("Copying...\n")
+                                replace_remote_gpg_func()
+                            elif enc != "E" and dorf == "D":
+                                print("Copying... ", item)
+                                replace_remote_dir_func()
+                            elif enc != "E" and dorf == "f":
+                                print("Copying... ", item)
+                                replace_remote_file_func()
+                            time.sleep(1.5)
+                            os.system("clear")
+                            print_system_list_func()
+
+elif usr_inp in ["R", "r"]:
+    print("")
+    read_system_list_func()
+    prune_system_list_func()
+    make_category_lists_func()
+    make_list_keys_func()
+    print_system_list_func()
+
+    prune_restore_list_func()
+    
+    # make_dicts_for_input_func()
+    
+    # make_safety_dirs_func()
+
+    # x = 1
+    # while x == 1:
+    #     backup_choice = input("\nPlease enter a number to RESTORE a file: ")
+    #     if backup_choice in ["Q", "q"]:
+    #         exit(0)
+    #     elif backup_choice.isdigit() is False:
+    #         print("-->", backup_choice, "is not an option")
+    #     elif backup_choice.isdigit() is True:
+    #         print("TRUE")
+    #         prune_restore_list_func()
+            # for key,value in syslist_dict.items():
+            #     if key == int(backup_choice):
+            #         for row in system_list_pruned:
+            #             if value == row[1]:
+            #                 unused_key = row[0]
+            #                 item       = row[1]
+            #                 category   = row[2]
+            #                 dorf       = row[3]
+            #                 enc        = row[4]
+            #                 dolly      = row[5]
+            #                 fork       = row[6]
+            #                 local_base = row[7]
+            #                 local_path = row[8]
+            #                 back_base  = row[9]
+            #                 back_path  = row[10]
+                        
+            #                 if back_path == "sysname":
+            #                     back_path = remote_sysname
+
+            #                 make_remote_dirs_func()
+
+            #                 if enc == "E":
+            #                     print("Compressing... ", item)
+            #                     create_tar_func()
+            #                     print("Encrypting...")
+            #                     enc_gpg_func()
+            #                     print("Copying...\n")
+            #                     replace_remote_gpg_func()
+            #                 elif enc != "E" and dorf == "D":
+            #                     print("Copying... ", item)
+            #                     replace_remote_dir_func()
+            #                 elif enc != "E" and dorf == "f":
+            #                     print("Copying... ", item)
+            #                     replace_remote_file_func()
+            #                 time.sleep(1.5)
+            #                 os.system("clear")
+            #                 print_system_list_func()
 
 
 
