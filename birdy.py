@@ -21,33 +21,6 @@ soft_tag  = "a simple program to backup and restore files"
 # Version
 soft_vers = "0.4.0"
 
-# Variables
-# distro          = ''
-# sysname         = ''
-# usr_inp         = ''
-# usr_nag         = ''
-# usr_num         = ''
-# key_num         = ''
-# tar             = ''
-# do_more         = ''
-# tupl            = ''
-# W               = ''
-# O               = ''
-# pgp_recip       = ''
-# remote_root     = ''
-# remote_dolly    = ''
-# remote_forklift = ''
-# remote_sysname  = ''
-# item            = ''
-# rel_path        = ''
-# dorf            = ''
-# enc_flag        = ''
-# dolly_flag      = ''
-# fork_flag       = ''
-# back_safe       = ''
-# local_safe      = ''
-# backup_path     = ''
-
 # Lists
 # key_list = []
 # system_list = []
@@ -182,13 +155,13 @@ def make_dicts_for_input_func():
         enc_dict.update({key_1:i})
         key_1 += 1
     for i in unenc_list:
-        unenc_dict.update({key_50:i})
+        enc_dict.update({key_50:i})
         key_50 += 1
     for i in dolly_list:
-        dolly_dict.update({key_100:i})
+        enc_dict.update({key_100:i})
         key_100 += 1
     for i in fork_list:
-        fork_dict.update({key_200:i})
+        enc_dict.update({key_200:i})
         key_200 += 1
 
 
@@ -212,7 +185,7 @@ def make_list_keys_func():
 
 def print_system_list_func():
     print('{:<35}{:<35}{:<36}{:<}'.format(
-        "Encrypted", "Unencrypted", "Dolly Files", "Forklift Files"))
+        "Encrypted", "Unencrypted", "Dolly Files", "Forklift Files\n"))
     for c1,c2,c3,c4,c5,c6,c7,c8 in itertools.zip_longest(
             key_enc_pretty,
             enc_list,
@@ -491,7 +464,7 @@ if usr_inp in ["B","b"]:
                 replace_remote_file_func()
 
 ######################################################LEFT OFF HERE
-elif usr_inp in ["I", "i"]
+elif usr_inp in ["I", "i"]:
     print("")
     read_system_list_func()
     prune_system_list_func()
@@ -499,44 +472,75 @@ elif usr_inp in ["I", "i"]
     make_list_keys_func()
     print_system_list_func()
 
-    backup_choice = input("\nPlease select a file to back up: ")
-    if backup_choice not in ["Y", "y"]:
-        exit(0)
-    else:
-        make_safety_dirs_func()
-        make_remote_safe_func()
-        print("")
-        for row in system_list_basic:
-            unused_key = row[0]
-            item       = row[1]
-            category   = row[2]
-            dorf       = row[3]
-            enc        = row[4]
-            dolly      = row[5]
-            fork       = row[6]
-            local_base = row[7]
-            local_path = row[8]
-            back_base  = row[9]
-            back_path  = row[10]
+    make_dicts_for_input_func()
 
-            if back_path == "sysname":
-                back_path = remote_sysname
+    x = 1
+    while x == 1:
+        backup_choice = input("\nPlease enter a number to back up a file: ")
+        if backup_choice in ["Q", "q"]:
+            exit(0)
+        elif backup_choice.isdigit() is False:
+            print("-->", backup_choice, "is not an option")
+        elif backup_choice.isdigit() is True:
+            for key,value in enc_dict.items():
+                if key == int(backup_choice):
+                    print(value.split("/"))
+                    for row in system_list_basic:
+                        if value in row:
+                            # unused_key = row[0]
+                            # item       = row[1]
+                            # category   = row[2]
+                            # dorf       = row[3]
+                            # enc        = row[4]
+                            # dolly      = row[5]
+                            # fork       = row[6]
+                            # local_base = row[7]
+                            # local_path = row[8]
+                            # back_base  = row[9]
+                            # back_path  = row[10]
+                        
+                            # if back_path == "sysname":
+                            #     back_path = remote_sysname
+                            print(row)
 
-            make_remote_dirs_func()
 
-            if enc == "E":
-                print("Compressing... ", item)
-                create_tar_func()
-                print("Encrypting...")
-                enc_gpg_func()
-                print("Copying...\n")
-                replace_remote_gpg_func()
-            elif enc != "E" and dorf == "D":
-                print("Copying... ", item)
-                replace_remote_dir_func()
-            elif enc != "E" and dorf == "f":
-                print("Copying... ", item)
-                replace_remote_file_func()
+
+    # else:
+    #     make_safety_dirs_func()
+    #     make_remote_safe_func()
+    #     make_dicts_for_input_func()
+    #     print("")
+    #     for row in system_list_basic:
+    #         unused_key = row[0]
+    #         item       = row[1]
+    #         category   = row[2]
+    #         dorf       = row[3]
+    #         enc        = row[4]
+    #         dolly      = row[5]
+    #         fork       = row[6]
+    #         local_base = row[7]
+    #         local_path = row[8]
+    #         back_base  = row[9]
+    #         back_path  = row[10]
+
+    #         if back_path == "sysname":
+    #             back_path = remote_sysname
+
+    #         make_remote_dirs_func()
+
+    #         if enc == "E":
+    #             print("Compressing... ", item)
+    #             create_tar_func()
+    #             print("Encrypting...")
+    #             enc_gpg_func()
+    #             print("Copying...\n")
+    #             replace_remote_gpg_func()
+    #         elif enc != "E" and dorf == "D":
+    #             print("Copying... ", item)
+    #             replace_remote_dir_func()
+    #         elif enc != "E" and dorf == "f":
+    #             print("Copying... ", item)
+    #             replace_remote_file_func()
 
 
 
