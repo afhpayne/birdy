@@ -12,6 +12,7 @@ import sys
 import tarfile              ## to create tar archives
 import time                 ## for sleep pauses and time stamps
 import readline             ## avoid junk characters for backspace
+import glob
 
 # Software Name
 soft_name = "Birdy"
@@ -99,6 +100,11 @@ local_safe = os.path.join("/tmp/local_safety")
 # The birdy config file
 systemlist_src = os.path.join(user_home, ".config", "birdy", "system_list.csv")
 
+# Birdy pgp_email
+with open(os.path.join(user_home, '.config', 'birdy', 'pgp_email.txt'), 'r') as pgp_recip:
+    pgp_recip = pgp_recip.read().strip()
+
+
 # Lists
 system_list_full = []
 system_list_pruned = []
@@ -141,13 +147,13 @@ def prune_system_list_func():
             item_path = os.path.join(row[7], row[8], row[1])
         if os.path.isfile(item_path) or os.path.isdir(item_path):
             system_list_pruned.append(row)
-        for row in system_list_pruned:
-            if int(row[2]) < 99:
-                system_list_basic.append(row)
-            if 100 <= int(row[2]) < 200:
-                system_list_dolly.append(row)
-            if 200 <= int(row[2]) < 300:
-                system_list_fork.append(row)
+    for row in system_list_pruned:
+        if int(row[0]) < 99:
+            system_list_basic.append(row)
+        if 100 <= int(row[0]) < 200:
+            system_list_dolly.append(row)
+        if 200 <= int(row[0]) < 300:
+            system_list_fork.append(row)
 
 
 
@@ -247,8 +253,10 @@ def print_dolly_list_func():
 
 # Create safety directories for local and remote files
 def make_safety_dirs_func():
-    subprocess.run(['mkdir', '-p', (os.path.join('/tmp/local_safety'))])
-    subprocess.run(['mkdir', '-p', (os.path.join('/tmp/backup_safety'))])
+    shutil.rmtree(back_safe, ignore_errors=True)
+    shutil.rmtree(local_safe, ignore_errors=True)
+    subprocess.run(['mkdir', '-p', back_safe])
+    subprocess.run(['mkdir', '-p', local_safe])
 
 
 # Backup functions
@@ -258,50 +266,58 @@ def make_remote_dirs_func():
     subprocess.run(['mkdir', '-p', (os.path.join(remote_dolly))])
     subprocess.run(['mkdir', '-p', (os.path.join(remote_forklift))])
 
-## Copy the remote ENCRYPTED target files to the backup_safety folder in /tmp
-# def make_remote_safe_gpg_func():
-#     shutil.copy2((os.path.join(
-#         remote_root, back_base, back_path, local_path, (item + '.tar.bz2.gpg'))), (os.path.join(back_safe, local_path, (item + '.tar.bz2.gpg'))))
+
+# Copy remote target files to /tmp/backup_safety
+def make_remote_safe_func():
+    shutil.copytree(remote_sysname, back_safe, dirs_exist_ok=True)
+
+# Create tar.bz2 archive of local file
+def create_tar_func():
+    tar = tarfile.open(os.path.join(local_safe, (item + '.tar.bz2')), 'w:bz2')
+    tar.add(os.path.join(user_home, local_path, item), arcname=item)
+    tar.close()
 
 
-## Copy the remote ENCRYPTED target files to the backup_safety folder in /tmp
-def make_remote_safe_gpg_func():
-    shutil.copy2((os.path.join(remote_root, back_base, back_path, local_path, (item + '.tar.bz2.gpg'))), (os.path.join(back_safe, local_path)))
+## Encrypt gpg file from tar.bz2 archive
+def enc_gpg_func():
+    subprocess.run(['gpg', '--yes', '-o', (
+        os.path.join(local_safe, (
+            item + '.tar.bz2.gpg'))),
+                    '-r', pgp_recip, '--encrypt', (
+                        os.path.join(local_safe, (item + '.tar.bz2')))])
 
 
-# ## Copy the remote target files to the backup_safety folder in /tmp
-# def make_remote_safe_func():
-#     subprocess.run(['rsync', '-r', '-p', '-t', '-E', (os.path.join(backup_path, rel_path, item)), (os.path.join(back_safe))])
-#     os.rename((os.path.join(back_safe, item)), (os.path.join(back_safe, (item + '_' + str(time.monotonic()))))) 
+# Move archive to remote directory
+def replace_remote_gpg_func():
+    subprocess.run(
+        ['rsync', '-r', '-p', '-t', '-E', '--progress', (
+            os.path.join(local_safe, (item + '.tar.bz2.gpg'))), (
+                os.path.join(back_path, local_path, (item + '.tar.bz2.gpg')))])
 
 
-# ## Create a tar bz2 archive that can be encrypted with gpg
-# def create_tar_func():
-#     tar = tarfile.open(os.path.join(local_safe, (item + '.tar.bz2')), 'w:bz2')
-#     tar.add(os.path.join(user_home, rel_path, item), arcname=item)
-#     tar.close()
+# Replace remote dir contents from local
+def replace_remote_dir_func():
+    subprocess.run(
+        ['rsync', '-r', '-p', '-t', '-E', '--progress', (
+            os.path.join(user_home, local_path, item, '')), (
+                os.path.join(back_path, local_path, item, ''))])
 
 
-# ## Encrypt gpg file from tar.bz2 archive
-# def enc_gpg_func():
-#     subprocess.run(['gpg', '--yes', '-o', (os.path.join(local_safe, (item + '.tar.bz2.gpg'))), '-r', pgp_recip, '--encrypt', (os.path.join(local_safe, (item + '.tar.bz2')))])
+# Replace remote file contents from local
+def replace_remote_file_func():
+    subprocess.run(
+        ['rsync', '-r', '-p', '-t', '-E', '--progress', (
+            os.path.join(user_home, local_path, item)), (
+                os.path.join(back_path, local_path, item))])
 
 
-# ## Move archive to remote directory
-# def replace_remote_gpg_func():
-#     subprocess.run(['rsync', '-r', '-p', '-t', '-E', '--progress', (os.path.join(local_safe, (item + '.tar.bz2.gpg'))), (os.path.join(backup_path, rel_path, ''))])
 
 
-# ## Replace remote dir contents from local
-# def replace_remote_dir_func():
-#     subprocess.run(['rsync', '-r', '-p', '-t', '-E', '--progress', (os.path.join(user_home, rel_path, item, '')), (os.path.join(backup_path, rel_path, item, ''))])
 
 
-# ## Replace remote file contents from local
-# def replace_remote_file_func():
-#     subprocess.run(['rsync', '-r', '-p', '-t', '-E', '--progress', (os.path.join(user_home, rel_path, item)), (os.path.join(backup_path, rel_path, item))])
 
 
+    
 # ## Create local directory if needed
 # def make_loc_dirs_func():
 #     subprocess.run(['mkdir', '-p', (os.path.join(user_home, rel_path, item))])
@@ -439,8 +455,9 @@ if usr_inp in ["B","b"]:
     if backup_choice not in ["Y", "y"]:
         exit(0)
     else:
-        print("YES")
         make_safety_dirs_func()
+        make_remote_safe_func()
+        print("")
         for row in system_list_basic:
             unused_key = row[0]
             item       = row[1]
@@ -459,10 +476,67 @@ if usr_inp in ["B","b"]:
 
             make_remote_dirs_func()
 
-            if dorf == "E":
-                make_remote_safe_gpg_func()
+            if enc == "E":
+                print("Compressing... ", item)
+                create_tar_func()
+                print("Encrypting...")
+                enc_gpg_func()
+                print("Copying...\n")
+                replace_remote_gpg_func()
+            elif enc != "E" and dorf == "D":
+                print("Copying... ", item)
+                replace_remote_dir_func()
+            elif enc != "E" and dorf == "f":
+                print("Copying... ", item)
+                replace_remote_file_func()
 
+######################################################LEFT OFF HERE
+elif usr_inp in ["I", "i"]
+    print("")
+    read_system_list_func()
+    prune_system_list_func()
+    make_category_lists_func()
+    make_list_keys_func()
+    print_system_list_func()
 
+    backup_choice = input("\nPlease select a file to back up: ")
+    if backup_choice not in ["Y", "y"]:
+        exit(0)
+    else:
+        make_safety_dirs_func()
+        make_remote_safe_func()
+        print("")
+        for row in system_list_basic:
+            unused_key = row[0]
+            item       = row[1]
+            category   = row[2]
+            dorf       = row[3]
+            enc        = row[4]
+            dolly      = row[5]
+            fork       = row[6]
+            local_base = row[7]
+            local_path = row[8]
+            back_base  = row[9]
+            back_path  = row[10]
+
+            if back_path == "sysname":
+                back_path = remote_sysname
+
+            make_remote_dirs_func()
+
+            if enc == "E":
+                print("Compressing... ", item)
+                create_tar_func()
+                print("Encrypting...")
+                enc_gpg_func()
+                print("Copying...\n")
+                replace_remote_gpg_func()
+            elif enc != "E" and dorf == "D":
+                print("Copying... ", item)
+                replace_remote_dir_func()
+            elif enc != "E" and dorf == "f":
+                print("Copying... ", item)
+                replace_remote_file_func()
 
 
 
