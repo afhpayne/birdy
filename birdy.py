@@ -89,8 +89,10 @@ system_list_basic = []
 system_list_dolly = []
 system_list_fork = []
 
-restore_list = []
 restore_list_pruned = []
+restore_list_basic = []
+restore_list_dolly = []
+restore_list_fork = []
 
 enc_list = []
 unenc_list = []
@@ -134,20 +136,42 @@ def prune_system_list_func():
 
 def prune_restore_list_func():
     for row in system_list_full:
-        if row[7] == "user_home":
-            item_path = os.path.join(remote_sysname, row[8], row[1])
+        if (row[7] == "user_home" and
+            row[4] == "n" and
+            row[5] == "x" and
+            row[6] == "x"):
+            item_path = os.path.join(
+                remote_sysname, row[8], row[1])
+        elif (row[7] == "user_home" and
+              row[4] == "E" and
+              row[5] == "x" and
+              row[6] == "x"):
+            item_path = os.path.join(
+                remote_sysname, row[8], (row[1] + ".tar.bz2.gpg"))
+        elif (row[7] == "user_home" and
+              row[4] == "E" and
+              row[5] == "L" and
+              row[6] == "x"):
+            item_path = os.path.join(
+                remote_dolly, row[8], (row[1] + ".tar.bz2.gpg"))
+        elif (row[7] == "user_home" and
+              row[4] == "E" and
+              row[5] == "x" and
+              row[6] == "F"):
+            item_path = os.path.join(
+                remote_forklift, row[8], (row[1] + ".tar.bz2.gpg"))
         else:
-            item_path = os.path.join(remote_sysname, row[7], row[8], row[1])
+            item_path = os.path.join(
+                remote_sysname, row[7], row[8], row[1])
         if os.path.isfile(item_path) or os.path.isdir(item_path):
-            restore_list_pruned.append(row)
-    print(restore_list_pruned)
-    # for row in system_list_pruned:
-    #     if int(row[0]) < 99:
-    #         system_list_basic.append(row)
-    #     if 100 <= int(row[0]) < 200:
-    #         system_list_dolly.append(row)
-    #     if 200 <= int(row[0]) < 300:
-    #         system_list_fork.append(row)
+            system_list_pruned.append(row)
+    for row in system_list_pruned:
+        if int(row[0]) < 99:
+            system_list_basic.append(row)
+        if 100 <= int(row[0]) < 200:
+            system_list_dolly.append(row)
+        if 200 <= int(row[0]) < 300:
+            system_list_fork.append(row)
 
 
 def make_category_lists_func():
@@ -560,64 +584,62 @@ elif usr_inp in ["I", "i"]:
 elif usr_inp in ["R", "r"]:
     print("")
     read_system_list_func()
-    prune_system_list_func()
+    prune_restore_list_func()
     make_category_lists_func()
     make_list_keys_func()
     print_system_list_func()
 
-    prune_restore_list_func()
-    
-    # make_dicts_for_input_func()
-    
-    # make_safety_dirs_func()
+    make_dicts_for_input_func()
+   
+    make_safety_dirs_func()
 
-    # x = 1
-    # while x == 1:
-    #     backup_choice = input("\nPlease enter a number to RESTORE a file: ")
-    #     if backup_choice in ["Q", "q"]:
-    #         exit(0)
-    #     elif backup_choice.isdigit() is False:
-    #         print("-->", backup_choice, "is not an option")
-    #     elif backup_choice.isdigit() is True:
-    #         print("TRUE")
-    #         prune_restore_list_func()
-            # for key,value in syslist_dict.items():
-            #     if key == int(backup_choice):
-            #         for row in system_list_pruned:
-            #             if value == row[1]:
-            #                 unused_key = row[0]
-            #                 item       = row[1]
-            #                 category   = row[2]
-            #                 dorf       = row[3]
-            #                 enc        = row[4]
-            #                 dolly      = row[5]
-            #                 fork       = row[6]
-            #                 local_base = row[7]
-            #                 local_path = row[8]
-            #                 back_base  = row[9]
-            #                 back_path  = row[10]
+    x = 1
+    while x == 1:
+        backup_choice = input("\nPlease enter a number to RESTORE a file: ")
+        if backup_choice in ["Q", "q"]:
+            exit(0)
+        elif backup_choice.isdigit() is False:
+            print("-->", backup_choice, "is not an option")
+        elif backup_choice.isdigit() is True:
+            print("TRUE")
+            prune_restore_list_func()
+            for key,value in syslist_dict.items():
+                if key == int(backup_choice):
+                    for row in system_list_pruned:
+                        if value == row[1]:
+                            unused_key = row[0]
+                            item       = row[1]
+                            category   = row[2]
+                            dorf       = row[3]
+                            enc        = row[4]
+                            dolly      = row[5]
+                            fork       = row[6]
+                            local_base = row[7]
+                            local_path = row[8]
+                            back_base  = row[9]
+                            back_path  = row[10]
                         
-            #                 if back_path == "sysname":
-            #                     back_path = remote_sysname
+                            if back_path == "sysname":
+                                back_path = remote_sysname
 
-            #                 make_remote_dirs_func()
+                            make_remote_dirs_func()
 
-            #                 if enc == "E":
-            #                     print("Compressing... ", item)
-            #                     create_tar_func()
-            #                     print("Encrypting...")
-            #                     enc_gpg_func()
-            #                     print("Copying...\n")
-            #                     replace_remote_gpg_func()
-            #                 elif enc != "E" and dorf == "D":
-            #                     print("Copying... ", item)
-            #                     replace_remote_dir_func()
-            #                 elif enc != "E" and dorf == "f":
-            #                     print("Copying... ", item)
-            #                     replace_remote_file_func()
-            #                 time.sleep(1.5)
-            #                 os.system("clear")
-            #                 print_system_list_func()
+                            if enc == "E":
+                                print("Compressing... ", item)
+                                create_tar_func()
+                                print("Encrypting...")
+                                enc_gpg_func()
+                                print("Copying...\n")
+                                replace_remote_gpg_func()
+                            elif enc != "E" and dorf == "D":
+                                print("Copying... ", item)
+                                replace_remote_dir_func()
+                            elif enc != "E" and dorf == "f":
+                                print("Copying... ", item)
+                                replace_remote_file_func()
+                            time.sleep(1.5)
+                            os.system("clear")
+                            print_system_list_func()
 
 
 
