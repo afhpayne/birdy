@@ -337,6 +337,12 @@ def replace_remote_file_func():
 
 
 # RESTORE FUNCTIONS ----------------------------------------------------------|
+# Create local directory if needed
+def make_loc_dirs_func():
+    subprocess.run(
+        ['mkdir', '-p', (os.path.join(user_home, local_path, item))])
+
+
 # Copy the LOCAL target files to the local_safety folder in /tmp
 def make_local_safe_func():
     subprocess.run(
@@ -349,48 +355,61 @@ def make_local_safe_func():
                 item + '_' + str(time.monotonic())))))
 
 
-# Create local directory if needed
-def make_loc_dirs_func():
+# Decrypt gpg and extract tar.bz2 file
+def dec_gpg_func():
     subprocess.run(
-        ['mkdir', '-p', (os.path.join(user_home, local_path, item))])
+        ['gpg', '--yes', '-o', (
+            os.path.join(
+                back_safe, (item + '.tar.bz2'))), '--decrypt', (
+                    os.path.join(
+                        back_path, local_path, (item + '.tar.bz2.gpg')))])
 
 
-# ## Decrypt gpg and extract tar.bz2 file
-# def dec_gpg_func():
-#     subprocess.run(['gpg', '--yes', '-o', (os.path.join(back_safe, (item + '.tar.bz2'))), '--decrypt', (os.path.join(backup_path, rel_path, (item + '.tar.bz2.gpg')))])
+# Extract user file from tar.bz2 archive
+def extract_tar_func():
+    tar = tarfile.open(os.path.join(back_safe, (item + '.tar.bz2')), 'r:bz2')
+    tar.extractall(path=(os.path.join(back_safe)))
+    tar.close()
 
 
-# ## Extract user file from tar.bz2 archive
-# def extract_tar_func():
-#     tar = tarfile.open(os.path.join(back_safe, (item + '.tar.bz2')), 'r:bz2')
-#     tar.extractall(path=(os.path.join(back_safe)))
-#     tar.close()
+# Replace local dir contents from ENCRYPTED backup
+def replace_local_dir_enc_func():
+    subprocess.run(
+        ['rsync', '-r', '-p', '-t', '-E', '-u', '--delete', '--progress', (
+            os.path.join(back_safe, item, '')), (
+                os.path.join(user_home, local_path, item, ''))])
 
 
-# ## Replace local dir contents from ENCRYPTED backup
-# def replace_local_dir_enc_func():
-#     subprocess.run(['rsync', '-r', '-p', '-t', '-E', '-u', '--delete', '--progress', (os.path.join(back_safe, item, '')), (os.path.join(user_home, rel_path, item, ''))])
+# Replace local file from ENCRYPTED backup
+def replace_local_file_enc_func():
+    subprocess.run(
+        ['rsync', '-r', '-p', '-t', '-E', '-u', '--progress', (
+            os.path.join(back_safe, item)), (
+                os.path.join(user_home, local_path, item))])
 
 
-# ## Replace local dir contents from backup
-# def replace_local_dir_func():
-#     subprocess.run(['rsync', '-r', '-p', '-t', '-E', '-u', '--delete', '--progress', (os.path.join(backup_path, rel_path, item, '')), (os.path.join(user_home, rel_path, item, ''))])
+# Replace local dir contents from backup
+def replace_local_dir_func():
+    subprocess.run(
+        ['rsync', '-r', '-p', '-t', '-E', '-u', '--delete', '--progress', (
+            os.path.join(back_path, local_path, item, '')), (
+                os.path.join(user_home, local_path, item, ''))])
 
 
-# ## Replace local file from ENCRYPTED backup
-# def replace_local_file_enc_func():
-#     subprocess.run(['rsync', '-r', '-p', '-t', '-E', '-u', '--progress', (os.path.join(back_safe, item)), (os.path.join(user_home, rel_path, item))])
+# Replace local file from backup
+def replace_local_file_func():
+    subprocess.run(
+        ['rsync', '-r', '-p', '-t', '-E', '-u', '--progress', (
+            os.path.join(back_path, local_path, item)), (
+                os.path.join(user_home, local_path, item))])
 
 
-# ## Replace local file from backup
-# def replace_local_file_func():
-#     subprocess.run(['rsync', '-r', '-p', '-t', '-E', '-u', '--progress', (os.path.join(backup_path, rel_path, item)), (os.path.join(user_home, rel_path, item))])
-
-
-# ## Give the backup file extracted to /tmp a unique name to not interfere with next backup
-# ## MUST be kept separate since this name change would conflict with decrypting and extracting
-# def unique_back_name_func():
-#     os.rename((os.path.join(back_safe, item)), (os.path.join(back_safe, (item + '_' + str(time.monotonic())))))
+# Give the backup file extracted to /tmp a
+# unique name to not interfere with next backup
+def unique_back_name_func():
+    os.rename((
+        os.path.join(back_safe, item)), (
+            os.path.join(back_safe, (item + '_' + str(time.monotonic())))))
 
 
 # ## Show the actions being performed
@@ -601,11 +620,9 @@ elif usr_inp in ["R", "r"]:
         elif backup_choice.isdigit() is False:
             print("-->", backup_choice, "is not an option")
         elif backup_choice.isdigit() is True:
-            print("TRUE")
-            prune_restore_list_func()
             for key,value in syslist_dict.items():
                 if key == int(backup_choice):
-                    for row in system_list_pruned:
+                    for row in restore_list_pruned:
                         if value == row[1]:
                             unused_key = row[0]
                             item       = row[1]
@@ -618,25 +635,32 @@ elif usr_inp in ["R", "r"]:
                             local_path = row[8]
                             back_base  = row[9]
                             back_path  = row[10]
-                        
-                            if back_path == "sysname":
-                                back_path = remote_sysname
 
-                            make_remote_dirs_func()
+                            back_base = user_home
 
-                            if enc == "E":
-                                print("Compressing... ", item)
-                                create_tar_func()
-                                print("Encrypting...")
-                                enc_gpg_func()
+                            make_local_safe_func()
+
+                            if enc == "E" and dorf == "D":
+                                print("Decrypting... ", item)
+                                dec_gpg_func()
+                                print("Expanding...")
+                                extract_tar_func()
                                 print("Copying...\n")
-                                replace_remote_gpg_func()
+                                replace_local_dir_enc_func()
+                            elif enc == "E" and dorf == "f":
+                                print("Decrypting... ", item)
+                                dec_gpg_func()
+                                print("Expanding...")
+                                extract_tar_func()
+                                print("Copying... ", item)
+                                replace_local_file_enc_func()
                             elif enc != "E" and dorf == "D":
                                 print("Copying... ", item)
-                                replace_remote_dir_func()
+                                replace_local_dir_func()
                             elif enc != "E" and dorf == "f":
                                 print("Copying... ", item)
-                                replace_remote_file_func()
+                                replace_local_file_func()
+                            unique_back_name_func()
                             time.sleep(1.5)
                             os.system("clear")
                             print_system_list_func()
