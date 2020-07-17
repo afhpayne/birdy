@@ -412,43 +412,6 @@ def unique_back_name_func():
             os.path.join(back_safe, (item + '_' + str(time.monotonic())))))
 
 
-# ## Show the actions being performed
-# def show_actions_enc_func():
-#     print("\nENCRYPTING...")
-#     print(os.path.join(user_home, rel_path, item))
-#     print("to...")
-#     print(os.path.join(backup_path, rel_path, (item + '.tar.bz2.gpg')))
-
-
-# def show_actions_dec_func():
-#     print("\nDECRYPTING...")
-#     print(os.path.join(backup_path, rel_path, (item + '.tar.bz2.gpg')))
-#     print("to...")
-#     print(os.path.join(user_home, rel_path, item))
-
-
-# def show_actions_up_func():
-#     print("\ncopying...")
-#     print(os.path.join(user_home, rel_path, item))
-#     print("to...")
-#     print(os.path.join(backup_path, rel_path, item))
-
-
-# def show_actions_dn_func():
-#     print("\ncopying...")
-#     print(os.path.join(backup_path, rel_path, item))
-#     print("to...")
-#     print(os.path.join(user_home, rel_path, item))
-
-
-# ## Show the option to do more work or exit the program
-# def do_more_func():
-#     do_more=input("\nContinue? y/n? ")
-#     if do_more == 'y' or do_more == 'Y':
-#         os.system('clear')
-#     else:
-#         sys.exit()
-
 # Let's get started
 os.system('clear')
 print("\nWelcome to " + str(soft_name) + " " + str(soft_vers)\
@@ -665,7 +628,167 @@ elif usr_inp in ["R", "r"]:
                             os.system("clear")
                             print_system_list_func()
 
+elif usr_inp in ["D", "d"]:
+    print("")
+    dolly_choice = input("(s)end dolly files to remote or (r)eceive files to local? ")
+    if dolly_choice in ["S", "s"]:
+        read_system_list_func()
+        prune_system_list_func()
+        make_category_lists_func()
+        make_list_keys_func()
+        make_dicts_for_input_func()
+        make_safety_dirs_func()
 
+        x = 1
+        while x == 1:
+            backup_choice = input("\nBackup these files? ")
+            print_dolly_list_func()
+            if backup_choice in ["Q", "q"]:
+                exit(0)
+            elif backup_choice in ["Y", "y"]:
+                for row in restore_list_pruned:
+                    if row == 100:
+                        unused_key = row[0]
+                        item       = row[1]
+                        category   = row[2]
+                        dorf       = row[3]
+                        enc        = row[4]
+                        dolly      = row[5]
+                        fork       = row[6]
+                        local_base = row[7]
+                        local_path = row[8]
+                        back_base  = row[9]
+                        back_path  = row[10]
+
+                        back_base = remote_dolly
+
+                        make_remote_safe_func()
+    
+                        if dolly == "L":
+                            print("Compressing... ", item)
+                            create_tar_func()
+                            print("Encrypting...")
+                            enc_gpg_func()
+                            print("Copying...\n")
+                            replace_remote_gpg_func()
+                        exit(0)
+    elif dolly_choice in ["R", "r"]:
+        read_system_list_func()
+        prune_remote_list_func()
+        make_category_lists_func()
+        make_list_keys_func()
+        make_dicts_for_input_func()
+        make_safety_dirs_func()
+
+        x = 1
+        while x == 1:
+            backup_choice = input("\nRestore these files? ")
+            print_dolly_list_func()
+            if backup_choice in ["Q", "q"]:
+                exit(0)
+            elif backup_choice in ["Y", "y"]:
+                for row in restore_list_pruned:
+                    if row == 100:
+                        unused_key = row[0]
+                        item       = row[1]
+                        category   = row[2]
+                        dorf       = row[3]
+                        enc        = row[4]
+                        dolly      = row[5]
+                        fork       = row[6]
+                        local_base = row[7]
+                        local_path = row[8]
+                        back_base  = row[9]
+                        back_path  = row[10]
+
+                        back_base = remote_dolly
+
+                        make_local_safe_func()
+    
+                        if dolly == "L":
+                            print("Decrypting... ", item)
+                            dec_gpg_func()
+                            print("Expanding...")
+                            extract_tar_func()
+                            print("Copying...\n")
+                            replace_local_dir_enc_func()
+                        exit(0)
+
+elif usr_inp in ["Y", "y"]:
+    w = 1
+    while w == 1:
+        print("\nHere are the systems birdy found:\n")
+        for item in os.scandir(os.path.join(remote_root, "Linux_Backups")):
+            print(item.name)
+        print("")
+        yank_choice = input("\nPlease enter the system name to restore from: ")
+        if not os.path.isdir(os.path.join(remote_root, 'Linux_Backups', yank_choice.strip())):
+            print(yank_choice, " is not an option.")
+        else:
+            w = 2
+            remote_sysname = os.path.join(remote_root, 'Linux_Backups', yank_choice.strip())
+            read_system_list_func()
+            prune_restore_list_func()
+            make_category_lists_func()
+            make_list_keys_func()
+            print_basic_list_func()
+        
+            make_dicts_for_input_func()
+        
+            make_safety_dirs_func()
+        
+            x = 1
+            while x == 1:
+                backup_choice = input("\nPlease enter a number to RESTORE a file: ")
+                if backup_choice in ["Q", "q"]:
+                    exit(0)
+                elif backup_choice.isdigit() is False:
+                    print("-->", backup_choice, "is not an option")
+                elif backup_choice.isdigit() is True:
+                    for key,value in syslist_dict.items():
+                        if key == int(backup_choice):
+                            for row in restore_list_pruned:
+                                if value == row[1]:
+                                    unused_key = row[0]
+                                    item       = row[1]
+                                    category   = row[2]
+                                    dorf       = row[3]
+                                    enc        = row[4]
+                                    dolly      = row[5]
+                                    fork       = row[6]
+                                    local_base = row[7]
+                                    local_path = row[8]
+                                    back_base  = row[9]
+                                    back_path  = row[10]
+        
+                                    back_base = user_home
+        
+                                    make_local_safe_func()
+        
+                                    if enc == "E" and dorf == "D":
+                                        print("Decrypting... ", item)
+                                        dec_gpg_func()
+                                        print("Expanding...")
+                                        extract_tar_func()
+                                        print("Copying...\n")
+                                        replace_local_dir_enc_func()
+                                    elif enc == "E" and dorf == "f":
+                                        print("Decrypting... ", item)
+                                        dec_gpg_func()
+                                        print("Expanding...")
+                                        extract_tar_func()
+                                        print("Copying... ", item)
+                                        replace_local_file_enc_func()
+                                    elif enc != "E" and dorf == "D":
+                                        print("Copying... ", item)
+                                        replace_local_dir_func()
+                                    elif enc != "E" and dorf == "f":
+                                        print("Copying... ", item)
+                                        replace_local_file_func()
+                                    unique_back_name_func()
+                                    time.sleep(1.5)
+                                    os.system("clear")
+                                    print_system_list_func()
 
     # else:
     #     make_safety_dirs_func()
