@@ -347,7 +347,6 @@ def make_loc_dirs_func():
 # Copy the LOCAL target files to the local_safety folder in /tmp
 def make_local_safe_func():
     if os.path.join(user_home, local_path, item):
-        print("FILE FOUND")
         subprocess.run(
             ['rsync', '-r', '-p', '-t', '-E', (
                 os.path.join(user_home, local_path, item)), (
@@ -389,9 +388,10 @@ def replace_local_dir_enc_func():
 # Replace local file from ENCRYPTED backup
 def replace_local_file_enc_func():
     subprocess.run(
-        ['rsync', '-p', '-t', '-E', '-u', '--progress', (
+        ['rsync', '-p', '-t', '-E', '--progress', (
             os.path.join(back_safe, item)), (
-                os.path.join(user_home, local_path, item))])
+                os.path.join(user_home, local_path))])
+
 
 
 # Replace local dir contents from backup
@@ -611,16 +611,16 @@ elif usr_inp in ["R", "r"]:
 
                             back_path = remote_sysname
 
-                            # make_local_safe_func()
+                            make_local_safe_func()
                             make_loc_dirs_func()
 
-                            # if enc == "E" and dorf == "D":
-                            #     print("Decrypting... ", item)
-                            #     dec_gpg_func()
-                            #     print("Expanding...")
-                            #     extract_tar_func()
-                            #     print("Copying...\n")
-                            #     replace_local_dir_enc_func()
+                            if enc == "E" and dorf == "D":
+                                print("Decrypting... ", item)
+                                dec_gpg_func()
+                                print("Expanding...")
+                                extract_tar_func()
+                                print("Copying...\n")
+                                replace_local_dir_enc_func()
                             if enc == "E" and dorf == "f":
                                 print("Decrypting... ", item)
                                 dec_gpg_func()
@@ -628,12 +628,12 @@ elif usr_inp in ["R", "r"]:
                                 extract_tar_func()
                                 print("Copying... ", item)
                                 replace_local_file_enc_func()
-                            # elif enc != "E" and dorf == "D":
-                            #     print("Copying... ", item)
-                            #     replace_local_dir_func()
-                            # elif enc != "E" and dorf == "f":
-                            #     print("Copying... ", item)
-                            #     replace_local_file_func()
+                            elif enc != "E" and dorf == "D":
+                                print("Copying... ", item)
+                                replace_local_dir_func()
+                            elif enc != "E" and dorf == "f":
+                                print("Copying... ", item)
+                                replace_local_file_func()
                             time.sleep(1.5)
                             os.system("clear")
                             print_system_list_func()
