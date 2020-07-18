@@ -288,7 +288,7 @@ def make_safety_dirs_func():
 # BACKUP FUNCTIONS------------------------------------------------------------|
 # Create remote directory if needed
 def make_remote_dirs_func():
-    subprocess.run(['mkdir', '-p', (os.path.join(remote_sysname, local_path))])
+    subprocess.run(['mkdir', '-p', (os.path.join(remote_sysname))])
     subprocess.run(['mkdir', '-p', (os.path.join(remote_dolly))])
     subprocess.run(['mkdir', '-p', (os.path.join(remote_forklift))])
 
@@ -467,12 +467,15 @@ if usr_inp in ["B","b"]:
     make_list_keys_func()
     print_basic_list_func()
 
+    make_safety_dirs_func()
+    make_remote_safe_func()
+
+    make_remote_dirs_func()
+
     backup_choice = input("\nBack up all birdy files? Y/n ")
     if backup_choice not in ["Y", "y"]:
         exit(0)
     else:
-        make_safety_dirs_func()
-        make_remote_safe_func()
         print("")
         for row in system_list_basic:
             unused_key = row[0]
@@ -493,8 +496,6 @@ if usr_inp in ["B","b"]:
                 back_path = remote_dolly
             elif row[6] == "F":
                 back_path = remote_forklift
-
-            make_remote_dirs_func()
 
             if enc == "E":
                 print("Compressing... ", item)
