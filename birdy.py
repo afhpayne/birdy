@@ -279,8 +279,8 @@ def print_dolly_list_func():
 
 # Create safety directories for local and remote files
 def make_safety_dirs_func():
-    shutil.rmtree(back_safe, ignore_errors=True)
-    shutil.rmtree(local_safe, ignore_errors=True)
+    # shutil.rmtree(back_safe, ignore_errors=True)
+    # shutil.rmtree(local_safe, ignore_errors=True)
     subprocess.run(['mkdir', '-p', back_safe])
     subprocess.run(['mkdir', '-p', local_safe])
 
@@ -291,10 +291,20 @@ def make_remote_dirs_func():
     subprocess.run(['mkdir', '-p', (os.path.join(remote_sysname))])
     subprocess.run(['mkdir', '-p', (os.path.join(remote_dolly))])
     subprocess.run(['mkdir', '-p', (os.path.join(remote_forklift))])
+    for row in system_list_pruned:
+        if "user_home" in row[7]:
+            subprocess.run(
+                ['mkdir', '-p', (
+                    os.path.join(remote_sysname, row[8]))])
+        else:
+            subprocess.run(
+                ['mkdir', '-p', (
+                    os.path.join(remote_sysname, row[7], row[8]))]) 
 
 
 # Copy remote target files to /tmp/backup_safety
 def make_remote_safe_func():
+    shutil.rmtree(back_safe, ignore_errors=True)
     shutil.copytree(remote_sysname, back_safe, dirs_exist_ok=True)
 
 # Create tar.bz2 archive of local file
@@ -524,6 +534,8 @@ elif usr_inp in ["I", "i"]:
     make_safety_dirs_func()
     make_remote_safe_func()
 
+    make_remote_dirs_func()
+    
     x = 1
     while x == 1:
         backup_choice = input("\nPlease enter a number to BACK UP a file: ")
@@ -554,8 +566,6 @@ elif usr_inp in ["I", "i"]:
                                 back_path = remote_dolly
                             elif row[6] == "F":
                                 back_path = remote_forklift
-
-                            make_remote_dirs_func()
 
                             if enc == "E":
                                 print("Compressing... ", item)
