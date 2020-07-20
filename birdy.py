@@ -268,34 +268,28 @@ def make_dicts_for_input_func():
         syslist_dict.update({key_100:i})
         key_100 += 1
     for i in fork_list:
-        syslist_dict.update({key_200:i})
+        i = i.split("/")
+        try:
+            syslist_dict.update({key_200:i[1]})
+        except(IndexError):
+            syslist_dict.update({key_200:i[0]})
         key_200 += 1
 
 
 # Create safety directories for local and remote files
 def make_safety_dirs_func():
+    if os.path.isdir(back_safe):
+        shutil.rmtree(back_safe)
     subprocess.run(['mkdir', '-p', back_safe])
+    if os.path.isdir(local_safe):
+        shutil.rmtree(local_safe)
     subprocess.run(['mkdir', '-p', local_safe])
+    if os.path.isdir(birdy_work):
+        shutil.rmtree(birdy_work)
     subprocess.run(['mkdir', '-p', birdy_work])
 
 
 # BACKUP FUNCTIONS------------------------------------------------------------|
-# Create remote directory if needed
-# def make_remote_dirs_func():
-#     subprocess.run(['mkdir', '-p', (os.path.join(remote_sysname))])
-#     subprocess.run(['mkdir', '-p', (os.path.join(remote_dolly))])
-#     subprocess.run(['mkdir', '-p', (os.path.join(remote_forklift))])
-#     for row in system_list_pruned:
-#         if "user_home" in row[7]:
-#             subprocess.run(
-#                 ['mkdir', '-p', (
-#                     os.path.join(remote_sysname, row[8]))])
-#         else:
-#             subprocess.run(
-#                 ['mkdir', '-p', (
-#                     os.path.join(remote_sysname, row[7], row[8]))])
-
-
 # Copy remote target files to /tmp/backup_safety
 def make_remote_safe_func():
     path_concat_remote = os.path.join(
@@ -332,18 +326,18 @@ def make_remote_safe_func():
 
 # Create tar.bz2 archive of local file
 def create_tar_func():
-    tar = tarfile.open(os.path.join(local_safe, (item + '.tar.bz2')), 'w:bz2')
+    tar = tarfile.open(os.path.join(birdy_work, (item + '.tar.bz2')), 'w:bz2')
     tar.add(os.path.join(user_home, local_path, item), arcname=item)
     tar.close()
 
 
 ## Encrypt gpg file from tar.bz2 archive
 def enc_gpg_func():
-    subprocess.run(['gpg', '--yes', '-o', (
-        os.path.join(local_safe, (
-            item + '.tar.bz2.gpg'))),
-                    '-r', pgp_recip, '--encrypt', (
-                        os.path.join(local_safe, (item + '.tar.bz2')))])
+    subprocess.run(
+        ['gpg', '--yes', '-o', (
+            os.path.join(birdy_work, (
+                item + '.tar.bz2.gpg'))), '-r', pgp_recip, '--encrypt', (
+                    os.path.join(birdy_work, (item + '.tar.bz2')))])
 
 
 # Move archive to remote directory
@@ -352,7 +346,7 @@ def replace_remote_gpg_func():
         remote_base, back_base, sysname, local_path, back_path)
     subprocess.run(
         ['rsync', '-r', '-p', '-t', '-E', '--progress', (
-            os.path.join(local_safe, (item + '.tar.bz2.gpg'))), (
+            os.path.join(birdy_work, (item + '.tar.bz2.gpg'))), (
                 os.path.join(path_concat_remote, (item + '.tar.bz2.gpg')))])
 
 
@@ -377,41 +371,44 @@ def replace_remote_file_func():
 
 
 # RESTORE FUNCTIONS ----------------------------------------------------------|
-# Create local directory if needed
-def make_loc_dirs_func():
-    subprocess.run(
-        ['mkdir', '-p', (os.path.join(user_home, local_path, item))])
-
-
 # Copy the LOCAL target files to the local_safety folder in /tmp
 def make_local_safe_func():
-    if os.path.join(user_home, local_path, item):
+    path_concat_local = os.path.join(
+        user_home, local_path)
+    subprocess.run(
+        ['mkdir', '-p', path_concat_local])
+    path_concat_localsafe = os.path.join(
+        local_safe, local_path)
+    subprocess.run(
+        ['mkdir', '-p', path_concat_localsafe])
+    if os.path.isdir(os.path.join(path_concat_local, item)) is True:
         subprocess.run(
-            ['rsync', '-r', '-p', '-t', '-E', (
-                os.path.join(user_home, local_path, item)), (
-                    os.path.join(local_safe))])
-        os.rename((
-            os.path.join(local_safe, item)), (
-                os.path.join(local_safe, (
-                    item + '_' + str(time.monotonic())))))
-    else:
-        pass
+            ['rsync', '-r', '-p', '-t', '-E', (os.path.join(
+                path_concat_local, item)), (os.path.join(
+                    path_concat_localsafe, item))])
+    elif os.path.isfile(os.path.join(path_concat_local, item)) is True:
+        subprocess.run(
+            ['rsync', '-p', '-t', '-E', (
+                path_concat_local + item), (os.path.join(
+                    path_concat_localsafe, item))])
 
 
 # Decrypt gpg and extract tar.bz2 file
 def dec_gpg_func():
+    path_concat_remote = os.path.join(
+        remote_base, back_base, sysname, local_path, back_path)
     subprocess.run(
         ['gpg', '--yes', '-o', (
             os.path.join(
-                back_safe, (item + '.tar.bz2'))), '--decrypt', (
+                birdy_work, (item + '.tar.bz2'))), '--decrypt', (
                     os.path.join(
-                        back_path, local_path, (item + '.tar.bz2.gpg')))])
+                        path_concat_remote, (item + '.tar.bz2.gpg')))])
 
 
 # Extract user file from tar.bz2 archive
 def extract_tar_func():
-    tar = tarfile.open(os.path.join(back_safe, (item + '.tar.bz2')), 'r:bz2')
-    tar.extractall(path=(os.path.join(back_safe)))
+    tar = tarfile.open(os.path.join(birdy_work, (item + '.tar.bz2')), 'r:bz2')
+    tar.extractall(path=(os.path.join(birdy_work)))
     tar.close()
 
 
@@ -419,48 +416,47 @@ def extract_tar_func():
 def replace_local_dir_enc_func():
     subprocess.run(
         ['rsync', '-r', '-p', '-t', '-E', '-u', '--delete', '--progress', (
-            os.path.join(back_safe, item, '')), (
+            os.path.join(birdy_work, item, '')), (
                 os.path.join(user_home, local_path, item, ''))])
-    print(os.path.join(back_safe, item, ''))
 
 
 # Replace local file from ENCRYPTED backup
 def replace_local_file_enc_func():
     subprocess.run(
         ['rsync', '-p', '-t', '-E', '--progress', (
-            os.path.join(back_safe, item)), (
+            os.path.join(birdy_work, item)), (
                 os.path.join(user_home, local_path))])
-
 
 
 # Replace local dir contents from backup
 def replace_local_dir_func():
+    path_concat_remote = os.path.join(
+        remote_base, back_base, sysname, local_path, back_path)
     subprocess.run(
         ['rsync', '-r', '-p', '-t', '-E', '-u', '--delete', '--progress', (
-            os.path.join(back_safe, local_path, item, '')), (
+            os.path.join(path_concat_remote, item, '')), (
                 os.path.join(user_home, local_path, item, ''))])
 
 
 # Replace local file from backup
 def replace_local_file_func():
+    path_concat_remote = os.path.join(
+        remote_base, back_base, sysname, local_path, back_path)
     subprocess.run(
         ['rsync', '-r', '-p', '-t', '-E', '-u', '--progress', (
-            os.path.join(back_safe, local_path, item)), (
+            os.path.join(path_concat_remote, item)), (
                 os.path.join(user_home, local_path, item))])
-
-
-# Give the backup file extracted to /tmp a
-# unique name to not interfere with next backup
-def unique_back_name_func():
-    os.rename((
-        os.path.join(back_safe, item)), (
-            os.path.join(back_safe, (item + '_' + str(time.monotonic())))))
 
 
 # Let's get started
 os.system('clear')
-print("\nWelcome to " + str(soft_name) + " " + str(soft_vers)\
-      + " - " + str(soft_tag) + ".")
+print("\nWelcome to "
+      + str(soft_name)
+      + " "
+      + str(soft_vers)
+      + " - "
+      + str(soft_tag)
+      + ".")
 
 if sysname == '':
     print("\nCan't find system name...\n")
@@ -469,15 +465,24 @@ if sysname == '':
         print("\nSystem needs a name...")
         exit(1)
     else:
-        print("\nThank you, this", O+ distro +W, "system will use system name", O+ sysname +W, "\n")
+        print("\nThank you, this"
+              , O+ distro +W
+              , "system will use system name"
+              , O+ sysname +W
+              , "\n")
 else:
-    print("\nThis distro is", O+ distro +W, "and the system name is", O+ sysname +W)
+    print("\nThis distro is"
+          , O+ distro +W
+          , "and the system name is"
+          , O+ sysname +W)
 
 # Check for backup folder matching current system name
 if os.path.exists(remote_sysname):
     print("\nFound matching backup directory:", remote_sysname)
 else:
-    print("\nNo backup directory called " + str(sysname) + ", create it? y/n")
+    print("\nNo backup directory called "
+          + str(sysname)
+          + ", create it? y/n")
     make_dir = input("")
     if make_dir == 'y' or make_dir == 'Y':
         print("\nCreated ", remote_sysname)
@@ -498,7 +503,7 @@ usr_inp = input("\nOptions:(q)uit the program or\
     \n\t(y)ank from another backup\
     \n\n\tChoice: ")
 
-if usr_inp in ["B","b"]:
+if usr_inp in ["B", "b"]:
     print("")
     read_system_list_func()
     prune_system_list_4backup_func()
@@ -508,8 +513,6 @@ if usr_inp in ["B","b"]:
     print_basic_list_func()
 
     make_safety_dirs_func()
-
-    # make_remote_dirs_func()
 
     backup_choice = input("\nBack up all birdy files? Y/n ")
     if backup_choice not in ["Y", "y"]:
@@ -530,13 +533,6 @@ if usr_inp in ["B","b"]:
             back_path  = row[10]
             
             make_remote_safe_func()
-
-            # if row[5] == "x" and row[6] == "x":
-            #     back_path = remote_sysname
-            # elif row[5] == "L":
-            #     back_path = remote_dolly
-            # elif row[6] == "F":
-            #     back_path = remote_forklift
 
             if enc == "E":
                 print("\nCompressing... ", item)
@@ -562,12 +558,9 @@ elif usr_inp in ["I", "i"]:
     print_pruned_sorted_system_list_func()
 
     make_dicts_for_input_func()
-    
-    make_safety_dirs_func()
-    make_remote_safe_func()
 
-    make_remote_dirs_func()
-    
+    make_safety_dirs_func()
+
     x = 1
     while x == 1:
         backup_choice = input("\nPlease enter a number to BACK UP a file: ")
@@ -591,13 +584,11 @@ elif usr_inp in ["I", "i"]:
                             local_path = row[8]
                             back_base  = row[9]
                             back_path  = row[10]
-                        
-                            if row[5] == "x" and row[6] == "x":
-                                back_path = remote_sysname
-                            elif row[5] == "L":
-                                back_path = remote_dolly
-                            elif row[6] == "F":
-                                back_path = remote_forklift
+
+                            make_remote_safe_func()
+
+                            if row[5] == "L" or row[6] == "F":
+                                sysname = ""
 
                             if enc == "E":
                                 print("Compressing... ", item)
@@ -653,10 +644,7 @@ elif usr_inp in ["R", "r"]:
                             back_base  = row[9]
                             back_path  = row[10]
 
-                            back_path = remote_sysname
-
                             make_local_safe_func()
-                            make_loc_dirs_func()
 
                             if enc == "E" and dorf == "D":
                                 print("Decrypting... ", item)
