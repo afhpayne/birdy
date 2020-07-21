@@ -291,100 +291,59 @@ def make_safety_dirs_func():
 
 # BACKUP FUNCTIONS------------------------------------------------------------|
 # Copy remote target files to /tmp/backup_safety
-# def make_remote_safe_func():
-#     if dolly  == "L":
-#         path_concat_remote = os.path.join(remote_dolly)
-#     elif fork == "F":
-#         path_concat_remote = os.path.join(remote_forklift)
-#     else:
-#         path_concat_remote = os.path.join(
-#             remote_base, back_base, sysname, local_path, back_path)
-#         subprocess.run(
-#             ['mkdir', '-p', path_concat_remote])
-#         copy_remote_files_func()
-#         path_concat_backsafe = os.path.join(
-#             back_safe, back_path, local_path, '')
-#         subprocess.run(
-#             ['mkdir', '-p', path_concat_backsafe])
-#         path_concat_localsafe = os.path.join(
-#             local_safe, back_path, local_path, '')
-#         subprocess.run(
-#             ['mkdir', '-p', path_concat_localsafe])
-
-
-def copy_remote_files_func():
+def make_remote_safe_func():
     simple_remote_path = (os.path.join(
         remote_base,
         back_base,
         sysname,
         local_path,
         back_path))
+    subprocess.run(
+        ['mkdir', '-p', simple_remote_path]
+    )
     simple_backsafe_path = (os.path.join(
         back_safe,
         local_path,
         back_path))
-    simple_localsafe_path = (os.path.join(
-        local_safe,
-        local_path,
-        back_path))
-    
-    # if os.path.isfile(os.path.join(
-    #     simple_remote_path, (
-    #         item +
-    #         ".tar.bz2.gpg"))):
-    #     subprocess.run(
-    #         ['rsync', '-p', '-t', '-E', (
-    #             os.path.join(
-    #                 simple_remote_path,
-    #                 (item + '.tar.bz2.gpg'))), (
-    #                     os.path.join(
-    #                         simple_backsafe_path,
-    #                         (item + '.tar.bz2.gpg')))]
-    #     )
-    # if os.path.isdir(os.path.join(
-    #         simple_remote_path,
-    #         item)):
-    #     subprocess.run(
-    #         ['rsync', '-r', '-p', '-t', '-E', (
-    #             os.path.join(
-    #                 simple_remote_path,
-    #                 item)), (
-    #                     os.path.join(
-    #                         simple_backsafe_path,
-    #                         item))]
-    #     )
-    # if os.path.isfile(os.path.join(
-    #         simple_remote_path,
-    #         item)):
-    #     subprocess.run(
-    #         ['rsync', '-p', '-t', '-E', (os.path.join(
-    #             simple_remote_path,
-    #             item)), (
-    #                 os.path.join(
-    #                     simple_backsafe_path,
-    #                     item))]
-    #     )
-
-
-# def copy_remote_files_func():
-#     if os.path.isfile(os.path.join(path_concat_remote, (item + ".tar.bz2.gpg"))) is True:
-#         subprocess.run(
-#             ['rsync', '-p', '-t', '-E', (os.path.join(
-#                 path_concat_remote, (item + '.tar.bz2.gpg'))), (
-#                     os.path.join(
-#                         path_concat_backsafe, (item + '.tar.bz2.gpg')))])
-#     if os.path.isdir(path_concat_remote + item) is True:
-#         subprocess.run(
-#             ['rsync', '-r', '-p', '-t', '-E', (os.path.join(
-#                 path_concat_remote, item)), (
-#                     os.path.join(
-#                         path_concat_backsafe, item))])
-#     if os.path.isfile(os.path.join(path_concat_remote, item)) is True:
-#         subprocess.run(
-#             ['rsync', '-p', '-t', '-E', (os.path.join(
-#                 path_concat_remote, item)), (
-#                     os.path.join(
-#                         path_concat_backsafe, item))])
+    subprocess.run(
+        ['mkdir', '-p', simple_backsafe_path]
+    )
+    if os.path.isfile(os.path.join(
+        simple_remote_path, (
+            item +
+            ".tar.bz2.gpg"))):
+        subprocess.run(
+            ['rsync', '-p', '-t', '-E', (
+                os.path.join(
+                    simple_remote_path,
+                    (item + '.tar.bz2.gpg'))), (
+                        os.path.join(
+                            simple_backsafe_path,
+                            (item + '.tar.bz2.gpg')))]
+        )
+    elif os.path.isdir(os.path.join(
+            simple_remote_path,
+            item)):
+        subprocess.run(
+            ['rsync', '-r', '-p', '-t', '-E', (
+                os.path.join(
+                    simple_remote_path,
+                    item)), (
+                        os.path.join(
+                            simple_backsafe_path,
+                            item))]
+        )
+    elif os.path.isfile(os.path.join(
+            simple_remote_path,
+            item)):
+        subprocess.run(
+            ['rsync', '-p', '-t', '-E', (os.path.join(
+                simple_remote_path,
+                item)), (
+                    os.path.join(
+                        simple_backsafe_path,
+                        item))]
+        )
 
 
 # Create tar.bz2 archive of local file
@@ -436,24 +395,43 @@ def replace_remote_file_func():
 # RESTORE FUNCTIONS ----------------------------------------------------------|
 # Copy the LOCAL target files to the local_safety folder in /tmp
 def make_local_safe_func():
-    path_concat_local = os.path.join(
-        user_home, local_path)
+    simple_local_path = os.path.join(
+        user_home,
+        local_path)
     subprocess.run(
-        ['mkdir', '-p', path_concat_local])
-    path_concat_localsafe = os.path.join(
-        local_safe, local_path)
+        ['mkdir', '-p', simple_local_path]
+    )
+    simple_localsafe_path = os.path.join(
+        local_safe,
+        local_path,
+        back_path)
     subprocess.run(
-        ['mkdir', '-p', path_concat_localsafe])
-    if os.path.isdir(os.path.join(path_concat_local, item)) is True:
+        ['mkdir', '-p', simple_localsafe_path]
+    )
+    if os.path.isdir(os.path.join(
+            simple_local_path,
+            item)):
         subprocess.run(
-            ['rsync', '-r', '-p', '-t', '-E', (os.path.join(
-                path_concat_local, item)), (os.path.join(
-                    path_concat_localsafe, item))])
-    elif os.path.isfile(os.path.join(path_concat_local, item)) is True:
+            ['rsync', '-r', '-p', '-t', '-E', (
+                os.path.join(
+                    simple_local_path,
+                    item)), (
+                        os.path.join(
+                            simple_localsafe_path,
+                            item))]
+        )
+    elif os.path.isfile(os.path.join(
+            simple_local_path,
+            item)):
         subprocess.run(
             ['rsync', '-p', '-t', '-E', (
-                path_concat_local + item), (os.path.join(
-                    path_concat_localsafe, item))])
+                os.path.join(
+                    simple_local_path,
+                    item), (
+                        os.path.join(
+                            simple_localsafe_path,
+                            item))]
+            )
 
 
 # Decrypt gpg and extract tar.bz2 file
@@ -594,7 +572,7 @@ if usr_inp in ["B", "b"]:
             local_path = row[8]
             back_base  = row[9]
             back_path  = row[10]
-            
+
             make_remote_safe_func()
 
             if enc == "E":
@@ -769,24 +747,17 @@ elif usr_inp in ["D", "d"]:
                     back_path  = row[10]
 
                     if row[2] in ["100"]:
-                        remote_base = remote_dolly
                         sysname = ""
-                        
-
-                        # path_concat_remote = os.path.join(remote_dolly)
-                        # print(path_concat_remote)
-
-
-                        # make_remote_safe_func()
-                        copy_remote_files_func()
+                        make_remote_safe_func()
     
-                        # print("Compressing... ", item)
-                        # create_tar_func()
-                        # print("Encrypting...")
-                        # enc_gpg_func()
-                        # print("Copying...\n")
-                        # # replace_remote_gpg_func()
-                        # exit(0)
+                        print("Compressing... ", item)
+                        create_tar_func()
+                        print("Encrypting...")
+                        enc_gpg_func()
+                        print("Copying...\n")
+                        replace_remote_gpg_func()
+                exit(0)
+
 #     elif dolly_choice in ["R", "r"]:
 #         read_system_list_func()
 #         prune_remote_list_func()
