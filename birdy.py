@@ -270,9 +270,9 @@ def make_dicts_for_input_func():
     for i in fork_list:
         i = i.split("/")
         try:
-            syslist_dict.update({key_200:i[1]})
+            syslist_dict.update({key_200: i[1]})
         except(IndexError):
-            syslist_dict.update({key_200:i[0]})
+            syslist_dict.update({key_200: i[0]})
         key_200 += 1
 
 
@@ -291,49 +291,100 @@ def make_safety_dirs_func():
 
 # BACKUP FUNCTIONS------------------------------------------------------------|
 # Copy remote target files to /tmp/backup_safety
-def make_remote_safe_func():
-    if dolly  == "L":
-        path_concat_remote = os.path.join(remote_dolly)
-        copy_remote_files_func()
-    elif fork == "F":
-        path_concat_remote = os.path.join(remote_fork)
-        copy_remote_files_func()
-    else:
-        path_concat_remote = os.path.join(
-            remote_base, back_base, sysname, local_path, back_path)
-        subprocess.run(
-            ['mkdir', '-p', path_concat_remote])
-        copy_remote_files_func()
-        path_concat_backsafe = os.path.join(
-            back_safe, back_path, local_path, '')
-        subprocess.run(
-            ['mkdir', '-p', path_concat_backsafe])
-        path_concat_localsafe = os.path.join(
-            local_safe, back_path, local_path, '')
-        subprocess.run(
-            ['mkdir', '-p', path_concat_localsafe])
+# def make_remote_safe_func():
+#     if dolly  == "L":
+#         path_concat_remote = os.path.join(remote_dolly)
+#     elif fork == "F":
+#         path_concat_remote = os.path.join(remote_forklift)
+#     else:
+#         path_concat_remote = os.path.join(
+#             remote_base, back_base, sysname, local_path, back_path)
+#         subprocess.run(
+#             ['mkdir', '-p', path_concat_remote])
+#         copy_remote_files_func()
+#         path_concat_backsafe = os.path.join(
+#             back_safe, back_path, local_path, '')
+#         subprocess.run(
+#             ['mkdir', '-p', path_concat_backsafe])
+#         path_concat_localsafe = os.path.join(
+#             local_safe, back_path, local_path, '')
+#         subprocess.run(
+#             ['mkdir', '-p', path_concat_localsafe])
 
 
 def copy_remote_files_func():
-    path_concat_remote = ""
-    if os.path.isfile(path_concat_remote + item + ".tar.bz2.gpg") is True:
-        subprocess.run(
-            ['rsync', '-p', '-t', '-E', (
-                path_concat_remote + item + '.tar.bz2.gpg'), (
-                    os.path.join(
-                        path_concat_backsafe, (item + '.tar.bz2.gpg')))])
-    if os.path.isdir(path_concat_remote + item) is True:
-        subprocess.run(
-            ['rsync', '-r', '-p', '-t', '-E', (
-                path_concat_remote + item), (
-                    os.path.join(
-                        path_concat_backsafe, item))])
-    if os.path.isfile(path_concat_remote + item) is True:
-        subprocess.run(
-            ['rsync', '-p', '-t', '-E', (
-                path_concat_remote + item), (
-                    os.path.join(
-                        path_concat_backsafe, item))])
+    simple_remote_path = (os.path.join(
+        remote_base,
+        back_base,
+        sysname,
+        local_path,
+        back_path))
+    simple_backsafe_path = (os.path.join(
+        back_safe,
+        local_path,
+        back_path))
+    simple_localsafe_path = (os.path.join(
+        local_safe,
+        local_path,
+        back_path))
+    
+    # if os.path.isfile(os.path.join(
+    #     simple_remote_path, (
+    #         item +
+    #         ".tar.bz2.gpg"))):
+    #     subprocess.run(
+    #         ['rsync', '-p', '-t', '-E', (
+    #             os.path.join(
+    #                 simple_remote_path,
+    #                 (item + '.tar.bz2.gpg'))), (
+    #                     os.path.join(
+    #                         simple_backsafe_path,
+    #                         (item + '.tar.bz2.gpg')))]
+    #     )
+    # if os.path.isdir(os.path.join(
+    #         simple_remote_path,
+    #         item)):
+    #     subprocess.run(
+    #         ['rsync', '-r', '-p', '-t', '-E', (
+    #             os.path.join(
+    #                 simple_remote_path,
+    #                 item)), (
+    #                     os.path.join(
+    #                         simple_backsafe_path,
+    #                         item))]
+    #     )
+    # if os.path.isfile(os.path.join(
+    #         simple_remote_path,
+    #         item)):
+    #     subprocess.run(
+    #         ['rsync', '-p', '-t', '-E', (os.path.join(
+    #             simple_remote_path,
+    #             item)), (
+    #                 os.path.join(
+    #                     simple_backsafe_path,
+    #                     item))]
+    #     )
+
+
+# def copy_remote_files_func():
+#     if os.path.isfile(os.path.join(path_concat_remote, (item + ".tar.bz2.gpg"))) is True:
+#         subprocess.run(
+#             ['rsync', '-p', '-t', '-E', (os.path.join(
+#                 path_concat_remote, (item + '.tar.bz2.gpg'))), (
+#                     os.path.join(
+#                         path_concat_backsafe, (item + '.tar.bz2.gpg')))])
+#     if os.path.isdir(path_concat_remote + item) is True:
+#         subprocess.run(
+#             ['rsync', '-r', '-p', '-t', '-E', (os.path.join(
+#                 path_concat_remote, item)), (
+#                     os.path.join(
+#                         path_concat_backsafe, item))])
+#     if os.path.isfile(os.path.join(path_concat_remote, item)) is True:
+#         subprocess.run(
+#             ['rsync', '-p', '-t', '-E', (os.path.join(
+#                 path_concat_remote, item)), (
+#                     os.path.join(
+#                         path_concat_backsafe, item))])
 
 
 # Create tar.bz2 archive of local file
@@ -705,20 +756,28 @@ elif usr_inp in ["D", "d"]:
                 exit(0)
             elif backup_choice in ["Y", "y"]:
                 for row in system_list_pruned:
-                    if row[2] in ["100"]:
-                        unused_key = row[0]
-                        item       = row[1]
-                        category   = row[2]
-                        dorf       = row[3]
-                        enc        = row[4]
-                        dolly      = row[5]
-                        fork       = row[6]
-                        local_base = row[7]
-                        local_path = row[8]
-                        back_base  = row[9]
-                        back_path  = row[10]
+                    unused_key = row[0]
+                    item       = row[1]
+                    category   = row[2]
+                    dorf       = row[3]
+                    enc        = row[4]
+                    dolly      = row[5]
+                    fork       = row[6]
+                    local_base = row[7]
+                    local_path = row[8]
+                    back_base  = row[9]
+                    back_path  = row[10]
 
-                        make_remote_safe_func()
+                    if row[2] in ["100"]:
+                        remote_base = remote_dolly
+                        sysname = ""
+                        
+
+                        # path_concat_remote = os.path.join(remote_dolly)
+                        # print(path_concat_remote)
+
+
+                        # make_remote_safe_func()
                         copy_remote_files_func()
     
                         # print("Compressing... ", item)
@@ -727,7 +786,7 @@ elif usr_inp in ["D", "d"]:
                         # enc_gpg_func()
                         # print("Copying...\n")
                         # # replace_remote_gpg_func()
-                        exit(0)
+                        # exit(0)
 #     elif dolly_choice in ["R", "r"]:
 #         read_system_list_func()
 #         prune_remote_list_func()
