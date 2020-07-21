@@ -294,14 +294,16 @@ def make_safety_dirs_func():
 def make_remote_safe_func():
     if dolly  == "L":
         path_concat_remote = os.path.join(remote_dolly)
-        print("297", row[1])
+        copy_remote_files_func()
     elif fork == "F":
         path_concat_remote = os.path.join(remote_fork)
+        copy_remote_files_func()
     else:
         path_concat_remote = os.path.join(
             remote_base, back_base, sysname, local_path, back_path)
         subprocess.run(
             ['mkdir', '-p', path_concat_remote])
+        copy_remote_files_func()
         path_concat_backsafe = os.path.join(
             back_safe, back_path, local_path, '')
         subprocess.run(
@@ -310,6 +312,10 @@ def make_remote_safe_func():
             local_safe, back_path, local_path, '')
         subprocess.run(
             ['mkdir', '-p', path_concat_localsafe])
+
+
+def copy_remote_files_func():
+    path_concat_remote = ""
     if os.path.isfile(path_concat_remote + item + ".tar.bz2.gpg") is True:
         subprocess.run(
             ['rsync', '-p', '-t', '-E', (
@@ -713,6 +719,7 @@ elif usr_inp in ["D", "d"]:
                         back_path  = row[10]
 
                         make_remote_safe_func()
+                        copy_remote_files_func()
     
                         # print("Compressing... ", item)
                         # create_tar_func()
