@@ -27,27 +27,27 @@ import csv
 import glob
 import itertools
 import os
-from pathlib import Path    ## to use environment variables
-import platform             ## to get platform name
-import readline             ## avoid junk characters for backspace
-import shutil               ## to perform file operations
-import socket               ## to get host name
-import subprocess           ## to invoke bash commands
+from pathlib import Path    # to use environment variables
+import platform             # to get platform name
+import readline             # avoid junk characters for backspace
+import shutil               # to perform file operations
+import socket               # to get host name
+import subprocess           # to invoke bash commands
 import sys
-import tarfile              ## to create tar archives
-import time                 ## for sleep pauses and time stamps
+import tarfile              # to create tar archives
+import time                 # for sleep pauses and time stamps
 
 # Software Name
 soft_name = "Birdy"
-soft_tag  = "a simple program to backup and restore files"
+soft_tag = "a simple program to backup and restore files"
 
 # Version
-soft_vers = "0.4.1"
+soft_vers = "0.4.2"
 
 # Colors
-W = '\033[0m'  # white (normal)
-O = '\033[33m' # orange
-G = '\033[92m' # light green
+W = '\033[0m'   # white (normal)
+O = '\033[33m'  # orange
+G = '\033[92m'  # light green
 
 # Get distro
 tupl = platform.system()
@@ -284,19 +284,19 @@ def make_dicts_for_input_func():
     for i in enc_list:
         i = i.split("/")
         try:
-            syslist_dict.update({key_1:i[1]})
+            syslist_dict.update({key_1: i[1]})
         except(IndexError):
-            syslist_dict.update({key_1:i[0]})
+            syslist_dict.update({key_1: i[0]})
         key_1 += 1
     for i in unenc_list:
         i = i.split("/")
         try:
-            syslist_dict.update({key_50:i[1]})
+            syslist_dict.update({key_50: i[1]})
         except(IndexError):
-            syslist_dict.update({key_50:i[0]})
+            syslist_dict.update({key_50: i[0]})
         key_50 += 1
     for i in dolly_list:
-        syslist_dict.update({key_100:i})
+        syslist_dict.update({key_100: i})
         key_100 += 1
     for i in fork_list:
         i = i.split("/")
@@ -562,16 +562,16 @@ if sysname == '':
         print("\nSystem needs a name...")
         exit(1)
     else:
-        print("\nThank you, this"
-              , O+ distro +W
-              , "system will use system name"
-              , O+ sysname +W
-              , "\n")
+        print("\nThank you, this",
+              O+ distro +W,
+              "system will use system name",
+              O+ sysname +W,
+              "\n")
 else:
-    print("\nThis distro is"
-          , O+ distro +W
-          , "and the system name is"
-          , O+ sysname +W)
+    print("\nThis distro is",
+          O+ distro +W,
+          "and the system name is",
+          O+ sysname +W)
 
 # Check for backup folder matching current system name
 if os.path.exists(remote_sysname):
@@ -579,7 +579,7 @@ if os.path.exists(remote_sysname):
 else:
     print("\nNo backup directory called "
           + str(sysname)
-          + ", create it? y/n")
+          + ", create it? y/n ")
     make_dir = input("")
     if make_dir == 'y' or make_dir == 'Y':
         print("\nCreated ", remote_sysname)
