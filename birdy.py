@@ -42,7 +42,7 @@ soft_name = "Birdy"
 soft_tag = "a simple program to backup and restore files"
 
 # Version
-soft_vers = "0.4.4"
+soft_vers = "0.4.5"
 
 # Colors
 W = '\033[0m'   # white (normal)
@@ -536,19 +536,32 @@ def make_local_safe_func():
 
 # Decrypt gpg and extract tar.bz2 file
 def dec_gpg_func():
-    simple_remote_path = os.path.join(
-        remote_base,
-        back_base,
-        sysname,
-        local_path,
-        back_path)
-    subprocess.run(
-        ['gpg', '--yes', '-o', (
-            os.path.join(
-                birdy_work, (item + '.tar.bz2'))), '--decrypt', (
-                    os.path.join(
-                        simple_remote_path, (item + '.tar.bz2.gpg')))]
-    )
+
+
+    def run_decryption_func():
+        subprocess.run(
+            ['gpg', '--yes', '-o', (
+                os.path.join(
+                    birdy_work, (item + '.tar.bz2'))), '--decrypt', (
+                        os.path.join(
+                            simple_remote_path, (item + '.tar.bz2.gpg')))]
+        )
+
+    if row[5] == "L" or row[6] == "F":
+        simple_remote_path = os.path.join(
+            remote_base,
+            back_base,
+            local_path,
+            back_path)
+        run_decryption_func()
+    else:
+        simple_remote_path = os.path.join(
+            remote_base,
+            back_base,
+            sysname,
+            local_path,
+            back_path)
+        run_decryption_func()
 
 
 # Extract user file from tar.bz2 archive
@@ -850,25 +863,26 @@ elif usr_inp in ["D", "d"]:
 
         x = 1
         while x == 1:
-            backup_choice = input("\nBackup these items? ")
+            backup_choice = input("\nBACK UP these items? Y/n ")
             if backup_choice in ["Q", "q"]:
+                exit(0)
+            elif backup_choice not in ["Y", "y"]:
                 exit(0)
             elif backup_choice in ["Y", "y"]:
                 for row in system_list_pruned:
-                    unused_key = row[0]
-                    item       = row[1]
-                    category   = row[2]
-                    dorf       = row[3]
-                    enc        = row[4]
-                    dolly      = row[5]
-                    fork       = row[6]
-                    local_base = row[7]
-                    local_path = row[8]
-                    back_base  = row[9]
-                    back_path  = row[10]
-
                     if row[2] in ["100"]:
-                        sysname = ""
+                        unused_key = row[0]
+                        item       = row[1]
+                        category   = row[2]
+                        dorf       = row[3]
+                        enc        = row[4]
+                        dolly      = row[5]
+                        fork       = row[6]
+                        local_base = row[7]
+                        local_path = row[8]
+                        back_base  = row[9]
+                        back_path  = row[10]
+    
                         make_remote_safe_func()
     
                         print("\nCompressing... ", item)
@@ -877,6 +891,7 @@ elif usr_inp in ["D", "d"]:
                         enc_gpg_func()
                         print("Copying...\n")
                         replace_remote_gpg_func()
+                exit(0)
 
     if dolly_choice in ["R", "r"]:
         print("")
@@ -893,41 +908,44 @@ elif usr_inp in ["D", "d"]:
 
         x = 1
         while x == 1:
-            backup_choice = input("\nBackup these items? ")
+            backup_choice = input("\nRESTORE these items (REPLACE LOCAL)? Y/n ")
             if backup_choice in ["Q", "q"]:
+                exit(0)
+            elif backup_choice not in ["Y", "y"]:
                 exit(0)
             elif backup_choice in ["Y", "y"]:
                 for row in system_list_pruned:
-                    unused_key = row[0]
-                    item       = row[1]
-                    category   = row[2]
-                    dorf       = row[3]
-                    enc        = row[4]
-                    dolly      = row[5]
-                    fork       = row[6]
-                    local_base = row[7]
-                    local_path = row[8]
-                    back_base  = row[9]
-                    back_path  = row[10]
-
                     if row[2] in ["100"]:
+                        unused_key = row[0]
+                        item       = row[1]
+                        category   = row[2]
+                        dorf       = row[3]
+                        enc        = row[4]
+                        dolly      = row[5]
+                        fork       = row[6]
+                        local_base = row[7]
+                        local_path = row[8]
+                        back_base  = row[9]
+                        back_path  = row[10]
+
 
                         make_local_safe_func()
 
                         if enc == "E" and dorf == "D":
-                            print("Decrypting... ", item)
+                            print("\nDecrypting... ", item)
                             dec_gpg_func()
-                            print("Expanding...")
+                            print("\nExpanding...")
                             extract_tar_func()
-                            print("Copying...\n")
+                            print("\nCopying...\n")
                             replace_local_dir_enc_func()
                         if enc == "E" and dorf == "f":
-                            print("Decrypting... ", item)
+                            print("\nDecrypting... ", item)
                             dec_gpg_func()
-                            print("Expanding...")
+                            print("\nExpanding...")
                             extract_tar_func()
-                            print("Copying... ", item)
+                            print("\nCopying... ", item)
                             replace_local_file_enc_func()
+                exit(0)
 
 elif usr_inp in ["Y", "y"]:
     print("")
