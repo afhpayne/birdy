@@ -42,7 +42,7 @@ soft_name = "Birdy"
 soft_tag = "a simple program to backup and restore files"
 
 # Version
-soft_vers = "0.4.2"
+soft_vers = "0.4.3"
 
 # Colors
 W = '\033[0m'   # white (normal)
@@ -246,7 +246,7 @@ def print_pruned_sorted_system_list_func():
         print('{:<6}{:<25}'.format(
             c1, c2))
 
-
+## Consider this for a 4 column layout
 # def print_pruned_sorted_system_list_func():
 #     print('{:<35}{:<35}{:<36}{:<}'.format(
 #         "Encrypted", "Unencrypted", "Dolly Files", "Forklift Files\n"))
@@ -367,7 +367,6 @@ def make_remote_safe_func():
     elif os.path.isfile(os.path.join(
             simple_remote_path,
             item)):
-        print("369", simple_remote_path, simple_backsafe_path)
         subprocess.run(
             ['rsync', '-p', '-t', '-E', (os.path.join(
                 simple_remote_path,
@@ -397,27 +396,41 @@ def enc_gpg_func():
 # Move archive to remote directory
 def replace_remote_gpg_func():
     simple_remote_path = os.path.join(
-        remote_base, back_base, sysname, local_path, back_path)
+        remote_base,
+        back_base,
+        sysname,
+        local_path,
+        back_path)
     subprocess.run(
         ['rsync', '-r', '-p', '-t', '-E', '--progress', (
             os.path.join(birdy_work, (item + '.tar.bz2.gpg'))), (
-                os.path.join(simple_remote_path, (item + '.tar.bz2.gpg')))])
+                os.path.join(simple_remote_path, (item + '.tar.bz2.gpg')))]
+    )
 
 
 # Replace remote dir contents from local
 def replace_remote_dir_func():
     simple_remote_path = os.path.join(
-        remote_base, back_base, sysname, local_path, back_path)
+        remote_base,
+        back_base,
+        sysname,
+        local_path,
+        back_path)
     subprocess.run(
         ['rsync', '-r', '-p', '-t', '-E', '--progress', (
             os.path.join(user_home, local_path, item, '')), (
-                os.path.join(simple_remote_path, item, ''))])
+                os.path.join(simple_remote_path, item, ''))]
+    )
 
 
 # Replace remote file contents from local
 def replace_remote_file_func():
     simple_remote_path = os.path.join(
-        remote_base, back_base, sysname, local_path, back_path)
+        remote_base,
+        back_base,
+        sysname,
+        local_path,
+        back_path)
     subprocess.run(
         ['rsync', '-r', '-p', '-t', '-E', '--progress', (
             os.path.join(user_home, local_path, item)), (
