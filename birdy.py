@@ -42,7 +42,7 @@ soft_name = "Birdy"
 soft_tag  = "a simple program to backup and restore files"
 
 # Version
-soft_vers = "0.4.0"
+soft_vers = "0.4.1"
 
 # Colors
 W = '\033[0m'  # white (normal)
@@ -808,7 +808,7 @@ elif usr_inp in ["D", "d"]:
                         sysname = ""
                         make_remote_safe_func()
     
-                        print("Compressing... ", item)
+                        print("\nCompressing... ", item)
                         create_tar_func()
                         print("Encrypting...")
                         enc_gpg_func()
