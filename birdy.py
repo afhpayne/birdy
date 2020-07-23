@@ -42,7 +42,7 @@ soft_name = "Birdy"
 soft_tag = "a simple program to backup and restore files"
 
 # Version
-soft_vers = "0.4.6"
+soft_vers = "0.4.7"
 
 # Colors
 W = '\033[0m'   # white (normal)
@@ -828,24 +828,24 @@ elif usr_inp in ["R", "r"]:
                             make_local_safe_func()
 
                             if enc == "E" and dorf == "D":
-                                print("Decrypting... ", item)
+                                print("\nDecrypting... ", item)
                                 dec_gpg_func()
-                                print("Expanding...")
+                                print("\nExpanding...")
                                 extract_tar_func()
-                                print("Copying...\n")
+                                print("\nCopying...\n")
                                 replace_local_dir_enc_func()
                             if enc == "E" and dorf == "f":
-                                print("Decrypting... ", item)
+                                print("\nDecrypting... ", item)
                                 dec_gpg_func()
-                                print("Expanding...")
+                                print("\nExpanding...")
                                 extract_tar_func()
-                                print("Copying... ", item)
+                                print("\nCopying... ", item)
                                 replace_local_file_enc_func()
                             elif enc != "E" and dorf == "D":
-                                print("Copying... ", item)
+                                print("\nCopying... ", item)
                                 replace_local_dir_func()
                             elif enc != "E" and dorf == "f":
-                                print("Copying... ", item)
+                                print("\nCopying... ", item)
                                 replace_local_file_func()
                             more_choice_func()
 
