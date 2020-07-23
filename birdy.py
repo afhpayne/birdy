@@ -42,7 +42,7 @@ soft_name = "Birdy"
 soft_tag = "a simple program to backup and restore files"
 
 # Version
-soft_vers = "0.4.5"
+soft_vers = "0.4.6"
 
 # Colors
 W = '\033[0m'   # white (normal)
@@ -626,6 +626,14 @@ def get_alternate_sytems_func():
     for item in alt_list:
         print("\t" + item)
 
+
+def more_choice_func():
+    more_choice = input("\nContinue? Y/n ")
+    if more_choice in ["Y", "y"]:
+        pass
+    else:
+        exit(0)
+
 # Let's get started
 os.system('clear')
 print("\nWelcome to "
@@ -733,7 +741,6 @@ elif usr_inp in ["I", "i"]:
     make_group_lists_func()
     make_sorted_lists_func()
     make_sorted_lists_keys_func()
-    print_pruned_sorted_system_list_func()
 
     make_safety_dirs_func()
 
@@ -741,6 +748,7 @@ elif usr_inp in ["I", "i"]:
 
     x = 1
     while x == 1:
+        print_pruned_sorted_system_list_func()
         backup_choice = input("\nPlease enter a number to BACK UP a file: ")
         if backup_choice in ["Q", "q"]:
             exit(0)
@@ -778,9 +786,7 @@ elif usr_inp in ["I", "i"]:
                             elif enc != "E" and dorf == "f":
                                 print("\nCopying... ", item)
                                 replace_remote_file_func()
-                            time.sleep(2.5)
-                            os.system("clear")
-                            print_pruned_sorted_system_list_func()
+                                more_choice_func()
 
 elif usr_inp in ["R", "r"]:
     print("")
@@ -789,7 +795,6 @@ elif usr_inp in ["R", "r"]:
     make_group_lists_func()
     make_sorted_lists_func()
     make_sorted_lists_keys_func()
-    print_pruned_sorted_system_list_func()
 
     make_dicts_for_input_func()
    
@@ -797,6 +802,7 @@ elif usr_inp in ["R", "r"]:
 
     x = 1
     while x == 1:
+        print_pruned_sorted_system_list_func()
         backup_choice = input("\nPlease enter a number to RESTORE a file: ")
         if backup_choice in ["Q", "q"]:
             exit(0)
@@ -841,9 +847,7 @@ elif usr_inp in ["R", "r"]:
                             elif enc != "E" and dorf == "f":
                                 print("Copying... ", item)
                                 replace_local_file_func()
-                            time.sleep(1.5)
-                            os.system("clear")
-                            print_pruned_sorted_system_list_func()
+                            more_choice_func()
 
 elif usr_inp in ["D", "d"]:
     print("")
@@ -959,7 +963,6 @@ elif usr_inp in ["Y", "y"]:
     make_group_lists_func()
     make_sorted_lists_func()
     make_sorted_lists_keys_func()
-    print_basic_list_func()
 
     make_dicts_for_input_func()
    
@@ -967,6 +970,7 @@ elif usr_inp in ["Y", "y"]:
 
     x = 1
     while x == 1:
+        print_basic_list_func()
         print("\nRESTORING FROM SYSTEM NAMED " + system_choice.upper())
         backup_choice = input("\nPlease enter a number to RESTORE a file: ")
         if backup_choice in ["Q", "q"]:
@@ -1012,6 +1016,4 @@ elif usr_inp in ["Y", "y"]:
                             elif enc != "E" and dorf == "f":
                                 print("Copying... ", item)
                                 replace_local_file_func()
-                            time.sleep(1.5)
-                            os.system("clear")
-                            print_pruned_sorted_system_list_func()
+                            more_choice_func()
