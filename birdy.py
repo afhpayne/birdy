@@ -42,7 +42,7 @@ soft_name = "Birdy"
 soft_tag = "a simple program to backup and restore files"
 
 # Version
-soft_vers = "0.4.7"
+soft_vers = "0.4.8"
 
 # Colors
 W = '\033[0m'   # white (normal)
@@ -786,7 +786,7 @@ elif usr_inp in ["I", "i"]:
                             elif enc != "E" and dorf == "f":
                                 print("\nCopying... ", item)
                                 replace_remote_file_func()
-                                more_choice_func()
+                            more_choice_func()
 
 elif usr_inp in ["R", "r"]:
     print("")
