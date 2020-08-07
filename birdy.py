@@ -42,7 +42,7 @@ soft_name = "Birdy"
 soft_tag = "a simple program to backup and restore files"
 
 # Version
-soft_vers = "0.4.8"
+soft_vers = "0.4.9"
 
 # Colors
 W = '\033[0m'   # white (normal)
@@ -115,23 +115,35 @@ def read_system_list_func():
 
 # Filters files not present on the system
 def prune_system_list_4backup_func():
+
+    def commit_to_list_func():
+        if os.path.isfile(item_path) or os.path.isdir(item_path):
+            if item_path not in system_list_pruned:
+                system_list_pruned.append(row)
+
     for row in system_list_full:
         if row[7] == "user_home":
             item_path = os.path.join(
                 user_home,
                 row[8],
                 row[1])
+            commit_to_list_func()
         else:
             item_path = os.path.join(
                 row[7],
                 row[8],
                 row[1])
-        if os.path.isfile(item_path) or os.path.isdir(item_path):
-            system_list_pruned.append(row)
+            commit_to_list_func()
 
 
 # Filters files not present in the backup
 def prune_system_list_4restore_func():
+
+    def commit_to_list_func():
+        if os.path.isfile(item_path) or os.path.isdir(item_path):
+            if item_path not in system_list_pruned:
+                system_list_pruned.append(row)
+
     for row in system_list_full:
         if (row[7] == "user_home" and
             row[4] == "n" and
@@ -139,18 +151,21 @@ def prune_system_list_4restore_func():
             row[6] == "x"):
             item_path = os.path.join(
                 remote_sysname, row[8], row[1])
+            commit_to_list_func()
         elif (row[7] == "user_home" and
               row[4] == "E" and
               row[5] == "x" and
               row[6] == "x"):
             item_path = os.path.join(
                 remote_sysname, row[8], (row[1] + ".tar.bz2.gpg"))
+            commit_to_list_func()
         elif (row[7] == "user_home" and
               row[4] == "E" and
               row[5] == "L" and
               row[6] == "x"):
             item_path = os.path.join(
                 remote_dolly, row[8], (row[1] + ".tar.bz2.gpg"))
+            commit_to_list_func()
         elif (row[7] == "user_home" and
               row[4] == "E" and
               row[5] == "x" and
@@ -160,8 +175,7 @@ def prune_system_list_4restore_func():
         else:
             item_path = os.path.join(
                 remote_sysname, row[7], row[8], row[1])
-        if os.path.isfile(item_path) or os.path.isdir(item_path):
-            system_list_pruned.append(row)
+            commit_to_list_func()
 
 
 # Make the three group lists
@@ -413,8 +427,7 @@ def enc_gpg_func():
 def replace_remote_gpg_func():
 
 
-    def copy_gpg_to_remote_func():
-        
+    def copy_gpg_to_remote_func():       
         subprocess.run(
             ['rsync', '-r', '-p', '-t', '-E', '--progress', (
                 os.path.join(birdy_work, (item + '.tar.bz2.gpg'))), (
@@ -473,7 +486,8 @@ def replace_remote_file_func():
         subprocess.run(
             ['rsync', '-r', '-p', '-t', '-E', '--progress', (
                 os.path.join(user_home, local_path, item)), (
-                    os.path.join(simple_remote_path, item))])
+                    os.path.join(simple_remote_path, item))]
+        )
 
     if row[5] == "L" or row[6] == "F":
         simple_remote_path = os.path.join(
@@ -931,7 +945,6 @@ elif usr_inp in ["D", "d"]:
                         local_path = row[8]
                         back_base  = row[9]
                         back_path  = row[10]
-
 
                         make_local_safe_func()
 
