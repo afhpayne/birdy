@@ -24,7 +24,6 @@
 
 # 79 spaces-------------------------------------------------------------------|
 import csv
-import glob
 import itertools
 import os
 from pathlib import Path    # to use environment variables
@@ -42,7 +41,7 @@ soft_name = "Birdy"
 soft_tag = "a simple program to backup and restore files"
 
 # Version
-soft_vers = "0.4.9"
+soft_vers = "0.5.0"
 
 # Colors
 W = '\033[0m'   # white (normal)
