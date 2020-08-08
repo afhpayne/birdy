@@ -41,7 +41,7 @@ soft_name = "Birdy"
 soft_tag = "a simple program to backup and restore files"
 
 # Version
-soft_vers = "0.5.0"
+soft_vers = "0.5.1"
 
 # Colors
 W = '\033[0m'   # white (normal)
@@ -969,6 +969,7 @@ elif usr_inp in ["Y", "y"]:
 
     get_alternate_sytems_func()
     system_choice = input("\nPlease enter a name: ")
+    sysname = system_choice
     remote_sysname = os.path.join(remote_backup, system_choice)
 
     prune_system_list_4restore_func()
