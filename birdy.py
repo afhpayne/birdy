@@ -41,7 +41,7 @@ soft_name = "Birdy"
 soft_tag = "a simple program to backup and restore files"
 
 # Version
-soft_vers = "0.5.2"
+soft_vers = "0.5.3"
 
 # Colors
 W = '\033[0m'   # white (normal)
@@ -138,6 +138,7 @@ def prune_system_list_4backup_func():
 # Filters files not present in the backup
 def prune_system_list_4restore_func():
 
+
     def commit_to_list_func():
         if os.path.isfile(item_path) or os.path.isdir(item_path):
             if item_path not in system_list_pruned:
@@ -171,6 +172,7 @@ def prune_system_list_4restore_func():
               row[6] == "F"):
             item_path = os.path.join(
                 remote_forklift, row[8], (row[1] + ".tar.bz2.gpg"))
+            commit_to_list_func()
         else:
             item_path = os.path.join(
                 remote_sysname, row[7], row[8], row[1])
