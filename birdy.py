@@ -41,7 +41,7 @@ soft_name = "Birdy"
 soft_tag = "a simple program to backup and restore files"
 
 # Version
-soft_vers = "0.5.1"
+soft_vers = "0.5.2"
 
 # Colors
 W = '\033[0m'   # white (normal)
@@ -793,13 +793,15 @@ elif usr_inp in ["I", "i"]:
                                 enc_gpg_func()
                                 print("Copying...\n")
                                 replace_remote_gpg_func()
+                                more_choice_func()
                             elif enc != "E" and dorf == "D":
                                 print("\nCopying... ", item)
                                 replace_remote_dir_func()
+                                more_choice_func()
                             elif enc != "E" and dorf == "f":
                                 print("\nCopying... ", item)
                                 replace_remote_file_func()
-                            more_choice_func()
+                                more_choice_func()
 
 elif usr_inp in ["R", "r"]:
     print("")
@@ -840,28 +842,31 @@ elif usr_inp in ["R", "r"]:
 
                             make_local_safe_func()
 
-                            if enc == "E" and dorf == "D":
+                            if enc == "E" and dorf == "D" and dolly == "x":
                                 print("\nDecrypting... ", item)
                                 dec_gpg_func()
                                 print("\nExpanding...")
                                 extract_tar_func()
                                 print("\nCopying...\n")
                                 replace_local_dir_enc_func()
-                            if enc == "E" and dorf == "f":
+                                more_choice_func()
+                            elif enc == "E" and dorf == "f" and dolly == "x":
                                 print("\nDecrypting... ", item)
                                 dec_gpg_func()
                                 print("\nExpanding...")
                                 extract_tar_func()
                                 print("\nCopying... ", item)
                                 replace_local_file_enc_func()
+                                more_choice_func()
                             elif enc != "E" and dorf == "D":
                                 print("\nCopying... ", item)
                                 replace_local_dir_func()
+                                more_choice_func()
                             elif enc != "E" and dorf == "f":
                                 print("\nCopying... ", item)
                                 replace_local_file_func()
-                            more_choice_func()
-
+                                more_choice_func()
+ 
 elif usr_inp in ["D", "d"]:
     print("")
     dolly_choice = input("(s)end dolly files to remote or (r)eceive files to local? ")
@@ -954,7 +959,7 @@ elif usr_inp in ["D", "d"]:
                             extract_tar_func()
                             print("\nCopying...\n")
                             replace_local_dir_enc_func()
-                        if enc == "E" and dorf == "f":
+                        elif enc == "E" and dorf == "f":
                             print("\nDecrypting... ", item)
                             dec_gpg_func()
                             print("\nExpanding...")
@@ -1009,24 +1014,27 @@ elif usr_inp in ["Y", "y"]:
 
                             make_local_safe_func()
 
-                            if enc == "E" and dorf == "D":
+                            if enc == "E" and dorf == "D" and dolly == "x":
                                 print("Decrypting... ", item)
                                 dec_gpg_func()
                                 print("Expanding...")
                                 extract_tar_func()
                                 print("Copying...\n")
                                 replace_local_dir_enc_func()
-                            if enc == "E" and dorf == "f":
+                                more_choice_func()
+                            elif enc == "E" and dorf == "D" and dolly == "x":
                                 print("Decrypting... ", item)
                                 dec_gpg_func()
                                 print("Expanding...")
                                 extract_tar_func()
                                 print("Copying... ", item)
                                 replace_local_file_enc_func()
+                                more_choice_func()
                             elif enc != "E" and dorf == "D":
                                 print("Copying... ", item)
                                 replace_local_dir_func()
+                                more_choice_func()
                             elif enc != "E" and dorf == "f":
                                 print("Copying... ", item)
                                 replace_local_file_func()
-                            more_choice_func()
+                                more_choice_func()
