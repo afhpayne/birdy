@@ -41,7 +41,7 @@ soft_name = "Birdy"
 soft_tag = "a simple program to backup and restore files"
 
 # Version
-soft_vers = "0.5.3"
+soft_vers = "0.5.4"
 
 # Colors
 W = '\033[0m'   # white (normal)
@@ -1024,7 +1024,7 @@ elif usr_inp in ["Y", "y"]:
                                 print("Copying...\n")
                                 replace_local_dir_enc_func()
                                 more_choice_func()
-                            elif enc == "E" and dorf == "D" and dolly == "x":
+                            elif enc == "E" and dorf == "f" and dolly == "x":
                                 print("Decrypting... ", item)
                                 dec_gpg_func()
                                 print("Expanding...")
