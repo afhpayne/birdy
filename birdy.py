@@ -41,7 +41,7 @@ soft_name = "Birdy"
 soft_tag = "a simple program to backup and restore files"
 
 # Version
-soft_vers = "0.5.4"
+soft_vers = "0.5.5"
 
 # Colors
 W = '\033[0m'   # white (normal)
@@ -63,11 +63,13 @@ global user_home
 user_home = os.environ['HOME']
 
 # Define the backup directories
-remote_base = os.path.join(os.environ['HOME'], 'Dropbox')
-remote_dolly = os.path.join(remote_base, 'Linux_Shared', 'dolly_files')
-remote_forklift = os.path.join(remote_base, 'Linux_Forklift')
-remote_backup = os.path.join(remote_base, 'Linux_Backups')
-remote_sysname = os.path.join(remote_base, 'Linux_Backups', sysname)
+remote_nextcloud = os.path.join(os.environ['HOME'], 'Nexcloud/s3_share')
+remote_dropbox = os.path.join(os.environ['HOME'], 'Dropbox')
+remote_cloud = remote_dropbox
+remote_dolly = os.path.join(remote_cloud, 'Linux_Shared', 'dolly_files')
+remote_forklift = os.path.join(remote_cloud, 'Linux_Forklift')
+remote_backup = os.path.join(remote_cloud, 'Linux_Backups')
+remote_sysname = os.path.join(remote_cloud, 'Linux_Backups', sysname)
 
 # Safety folders
 back_safe = os.path.join("/tmp/backup_safety")
@@ -80,7 +82,8 @@ systemlist_src = os.path.join(user_home, ".config", "birdy", "system_list.csv")
 # Birdy pgp_email
 with open(
         os.path.join(
-            user_home, '.config', 'birdy', 'pgp_email.txt'), 'r') as pgp_recip:
+            user_home, '.config', 'birdy', 'pgp_email.txt')
+        , 'r') as pgp_recip:
     pgp_recip = pgp_recip.read().strip()
 
 # Lists
@@ -387,7 +390,7 @@ def make_remote_safe_func():
     )
     if dolly == "L" or fork == "F":
         simple_remote_path = os.path.join(
-            remote_base,
+            remote_cloud,
             back_base,
             local_path,
             back_path)
@@ -397,7 +400,7 @@ def make_remote_safe_func():
         copy_items_to_safety_func()
     else:
         simple_remote_path = os.path.join(
-            remote_base,
+            remote_cloud,
             back_base,
             sysname,
             local_path,
@@ -437,14 +440,14 @@ def replace_remote_gpg_func():
 
     if row[5] == "L" or row[6] == "F":
         simple_remote_path = os.path.join(
-            remote_base,
+            remote_cloud,
             back_base,
             local_path,
             back_path)
         copy_gpg_to_remote_func()
     else:
         simple_remote_path = os.path.join(
-            remote_base,
+            remote_cloud,
             back_base,
             sysname,
             local_path,
@@ -455,6 +458,7 @@ def replace_remote_gpg_func():
 # Replace remote dir contents from local
 def replace_remote_dir_func():
 
+
     def copy_dir_to_remote_func():
         subprocess.run(
             ['rsync', '-r', '-p', '-t', '-E', '--progress', (
@@ -464,14 +468,14 @@ def replace_remote_dir_func():
 
     if row[5] == "L" or row[6] == "F":
         simple_remote_path = os.path.join(
-            remote_base,
+            remote_cloud,
             back_base,
             local_path,
             back_path)
         copy_dir_to_remote_func()
     else:
         simple_remote_path = os.path.join(
-            remote_base,
+            remote_cloud,
             back_base,
             sysname,
             local_path,
@@ -492,14 +496,14 @@ def replace_remote_file_func():
 
     if row[5] == "L" or row[6] == "F":
         simple_remote_path = os.path.join(
-            remote_base,
+            remote_cloud,
             back_base,
             local_path,
             back_path)
         copy_file_to_remote_func()
     else:
         simple_remote_path = os.path.join(
-            remote_base,
+            remote_cloud,
             back_base,
             sysname,
             local_path,
@@ -564,14 +568,14 @@ def dec_gpg_func():
 
     if row[5] == "L" or row[6] == "F":
         simple_remote_path = os.path.join(
-            remote_base,
+            remote_cloud,
             back_base,
             local_path,
             back_path)
         run_decryption_func()
     else:
         simple_remote_path = os.path.join(
-            remote_base,
+            remote_cloud,
             back_base,
             sysname,
             local_path,
@@ -607,7 +611,7 @@ def replace_local_file_enc_func():
 # Replace local dir contents from backup
 def replace_local_dir_func():
     simple_remote_path = os.path.join(
-        remote_base,
+        remote_cloud,
         back_base,
         sysname,
         local_path,
@@ -622,7 +626,7 @@ def replace_local_dir_func():
 # Replace local file from backup
 def replace_local_file_func():
     simple_remote_path = os.path.join(
-        remote_base,
+        remote_cloud,
         back_base,
         sysname,
         local_path,
