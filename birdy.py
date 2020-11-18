@@ -41,7 +41,7 @@ soft_name = "Birdy"
 soft_tag = "a simple program to backup and restore files"
 
 # Version
-soft_vers = "0.5.6"
+soft_vers = "0.5.7"
 
 # Colors
 W = '\033[0m'   # white (normal)
@@ -92,23 +92,37 @@ system_list_pruned = []
 system_list_basic = []
 system_list_dolly = []
 system_list_fork = []
+system_list_root = []
 
 enc_list = []
 unenc_list = []
 dolly_list = []
 fork_list = []
+root_list = []
 
 key_enc_pretty = []
 key_unenc_pretty = []
 key_dolly_pretty = []
 key_fork_pretty = []
+key_root_pretty = []
 
 # Dictionaries
 syslist_dict = {}
 
 # Make a python list from the CSV config
+# cheat sheet
+# unused_key = row[0]
+# item       = row[1]
+# category   = row[2]
+# dorf       = row[3]
+# enc        = row[4]
+# dolly      = row[5]
+# fork       = row[6]
+# local_base = row[7]
+# local_path = row[8]
+# back_base  = row[9]
+# back_path  = row[10]
 def read_system_list_func():
-    # os.system('clear')
     with open(systemlist_src) as system_list:
         reader = csv.reader(system_list, delimiter=',')
         for row in itertools.islice(reader, 1, None, None):
@@ -118,10 +132,12 @@ def read_system_list_func():
 # Filters files not present on the system
 def prune_system_list_4backup_func():
 
+
     def commit_to_list_func():
         if os.path.isfile(item_path) or os.path.isdir(item_path):
             if item_path not in system_list_pruned:
                 system_list_pruned.append(row)
+
 
     for row in system_list_full:
         if row[7] == "user_home":
@@ -132,6 +148,7 @@ def prune_system_list_4backup_func():
             commit_to_list_func()
         else:
             item_path = os.path.join(
+                "/",
                 row[7],
                 row[8],
                 row[1])
@@ -182,7 +199,6 @@ def prune_system_list_4restore_func():
             commit_to_list_func()
 
 
-# Make the three group lists
 def make_group_lists_func():
     for row in system_list_pruned:
         if int(row[0]) < 99:
@@ -191,22 +207,36 @@ def make_group_lists_func():
             system_list_dolly.append(row)
         if 200 <= int(row[0]) < 300:
             system_list_fork.append(row)
+        if 300 <= int(row[0]) < 400:
+            system_list_basic.append(row)
 
 
 def make_sorted_lists_func():
     for row in system_list_pruned:
         if int(row[0]) <= 99 and row[4] == "E":
-            enc_list.append(os.path.join(row[8], row[1]))
+            enc_list.append(os.path.join(
+                row[8], row[1]))
             enc_list.sort()
+
         if int(row[0]) <= 99 and row[4] == "n":
-            unenc_list.append(os.path.join(row[8], row[1]))
+            unenc_list.append(os.path.join(
+                row[8], row[1]))
             unenc_list.sort()
+
         if 100 <= int(row[0]) < 200 and row[5] == "L":
-            dolly_list.append(os.path.join(row[8], row[1]))
+            dolly_list.append(os.path.join(
+                row[8], row[1]))
             dolly_list.sort()
+
         if 200 <= int(row[0]) < 300 and row[6] == "F":
-            fork_list.append(os.path.join(row[8], row[1]))
+            fork_list.append(os.path.join(
+                row[8], row[1]))
             fork_list.sort()
+
+        if 300 <= int(row[0]) < 400:
+            root_list.append(os.path.join(
+                row[7], row[8], row[1]))
+            root_list.sort()
 
 
 def make_sorted_lists_keys_func():
@@ -226,6 +256,10 @@ def make_sorted_lists_keys_func():
     for i in key_fork:
         key_fork_pretty.append("[" + str(i) + "]")
 
+    key_root = list(range(300, (300 + len(root_list))))
+    for i in key_root:
+        key_root_pretty.append("[" + str(i) + "]")
+
 
 def print_basic_list_func():
     # os.system("clear")
@@ -240,6 +274,14 @@ def print_basic_list_func():
             fillvalue=""):
         print('{:<5}{:<30}{:<5}{:<30}'.format(
             c1, c2, c3, c4))
+    print('{:<35}'.format(
+        "\nSystem\n"))
+    for c1,c2 in itertools.zip_longest(
+            key_root_pretty,
+            root_list,
+            fillvalue=""):
+        print('{:<6}{:<30}'.format(
+            c1, c2))
 
 
 def print_pruned_sorted_system_list_func():
@@ -263,6 +305,26 @@ def print_pruned_sorted_system_list_func():
             fillvalue=""):
         print('{:<6}{:<25}'.format(
             c1, c2))
+    print('{:<35}'.format(
+        "\nSystem\n"))
+    for c1,c2 in itertools.zip_longest(
+            key_root_pretty,
+            root_list,
+            fillvalue=""):
+        print('{:<6}{:<30}'.format(
+            c1, c2))
+
+
+def print_dolly_list_func():
+    print('{:<}'.format(
+        "Dolly Files\n"))
+    for c1,c2 in itertools.zip_longest(
+            key_dolly_pretty,
+            dolly_list,
+            fillvalue=""):
+        print('{:<6}{}'.format(
+            c1, c2))
+
 
 ## Consider this for a 4 column layout
 # def print_pruned_sorted_system_list_func():
@@ -282,23 +344,13 @@ def print_pruned_sorted_system_list_func():
 #             c1, c2, c3, c4, c5, c6, c7, c8))
 
 
-def print_dolly_list_func():
-    print('{:<}'.format(
-        "Dolly Files\n"))
-    for c1,c2 in itertools.zip_longest(
-            key_dolly_pretty,
-            dolly_list,
-            fillvalue=""):
-        print('{:<6}{}'.format(
-            c1, c2))
-
-
 # Make dictionaries to reference user input to backup items
 def make_dicts_for_input_func():
     key_1 = 1
     key_50 = 50
     key_100 = 100
     key_200 = 200
+    key_300 = 300
     for i in enc_list:
         i = i.split("/")
         try:
@@ -323,6 +375,13 @@ def make_dicts_for_input_func():
         except(IndexError):
             syslist_dict.update({key_200: i[0]})
         key_200 += 1
+    for i in root_list:
+        i = i.split("/")
+        try:
+            syslist_dict.update({key_300: i[2]})
+        except(IndexError):
+            syslist_dict.update({key_300: i[1]})
+        key_300 += 1
 
 
 # Create safety directories for local and remote files
@@ -398,7 +457,19 @@ def make_remote_safe_func():
             ['mkdir', '-p', simple_remote_path]
         )
         copy_items_to_safety_func()
-    else:
+    elif row[2] == "300":
+        simple_remote_path = os.path.join(
+            remote_cloud,
+            back_base,
+            sysname,
+            local_base,
+            local_path,
+            back_path)
+        subprocess.run(
+            ['mkdir', '-p', simple_remote_path]
+        )
+        copy_items_to_safety_func()
+    elif row[2] != "300" and dolly != "L" and fork != "F":
         simple_remote_path = os.path.join(
             remote_cloud,
             back_base,
@@ -442,6 +513,15 @@ def replace_remote_gpg_func():
         simple_remote_path = os.path.join(
             remote_cloud,
             back_base,
+            local_path,
+            back_path)
+        copy_gpg_to_remote_func()
+    elif row[2] == "300":
+        simple_remote_path = os.path.join(
+            remote_cloud,
+            back_base,
+            sysname,
+            local_base,
             local_path,
             back_path)
         copy_gpg_to_remote_func()
@@ -653,6 +733,7 @@ def more_choice_func():
     else:
         exit(0)
 
+
 # Let's get started
 os.system('clear')
 print("\nWelcome to "
@@ -708,6 +789,7 @@ usr_inp = input("\nOptions:(q)uit the program or\
     \n\t(y)ank from another backup\
     \n\n\tChoice: ")
 
+
 if usr_inp in ["B", "b"]:
     print("")
     read_system_list_func()
@@ -739,7 +821,15 @@ if usr_inp in ["B", "b"]:
 
             make_remote_safe_func()
 
-            if enc == "E":
+            if enc == "E" and local_base == "user_home":
+                print("\nCompressing... ", item)
+                create_tar_func()
+                print("Encrypting...")
+                enc_gpg_func()
+                print("Copying...\n")
+                replace_remote_gpg_func()
+            elif enc == "E" and local_base != "user_home":
+                user_home = os.path.join("/", local_base)
                 print("\nCompressing... ", item)
                 create_tar_func()
                 print("Encrypting...")
@@ -792,7 +882,16 @@ elif usr_inp in ["I", "i"]:
 
                             make_remote_safe_func()
 
-                            if enc == "E":
+                            if enc == "E" and local_base == "user_home":
+                                print("\nCompressing... ", item)
+                                create_tar_func()
+                                print("Encrypting...")
+                                enc_gpg_func()
+                                print("Copying...\n")
+                                replace_remote_gpg_func()
+                                more_choice_func()
+                            elif enc == "E" and local_base != "user_home":
+                                user_home = os.path.join("/", local_base)
                                 print("\nCompressing... ", item)
                                 create_tar_func()
                                 print("Encrypting...")
