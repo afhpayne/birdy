@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
 
 # MIT License
 
@@ -41,7 +41,7 @@ soft_name = "Birdy"
 soft_tag = "a simple program to backup and restore files"
 
 # Version
-soft_vers = "0.5.7"
+soft_vers = "0.5.9"
 
 # Colors
 W = '\033[0m'   # white (normal)
@@ -109,8 +109,7 @@ key_root_pretty = []
 # Dictionaries
 syslist_dict = {}
 
-# Make a python list from the CSV config
-# cheat sheet
+# Cheat sheet
 # unused_key = row[0]
 # item       = row[1]
 # category   = row[2]
@@ -122,6 +121,9 @@ syslist_dict = {}
 # local_path = row[8]
 # back_base  = row[9]
 # back_path  = row[10]
+
+
+# Make a python list from the CSV config
 def read_system_list_func():
     with open(systemlist_src) as system_list:
         reader = csv.reader(system_list, delimiter=',')
@@ -192,6 +194,10 @@ def prune_system_list_4restore_func():
               row[6] == "F"):
             item_path = os.path.join(
                 remote_forklift, row[8], (row[1] + ".tar.bz2.gpg"))
+            commit_to_list_func()
+        elif row[7] != "user_home":
+            item_path = os.path.join(
+                remote_sysname, row[7], row[8], (row[1] + ".tar.bz2.gpg"))
             commit_to_list_func()
         else:
             item_path = os.path.join(
@@ -405,54 +411,54 @@ def make_remote_safe_func():
     def copy_items_to_safety_func():
         if os.path.isfile(os.path.join(
             simple_remote_path, (
-                item +
+                row[1] +
                 ".tar.bz2.gpg"))):
             subprocess.run(
                 ['rsync', '-p', '-t', '-E', (
                     os.path.join(
                         simple_remote_path,
-                        (item + '.tar.bz2.gpg'))), (
+                        (row[1] + '.tar.bz2.gpg'))), (
                             os.path.join(
                                 simple_remotesafe_path,
-                                (item + '.tar.bz2.gpg')))]
+                                (row[1] + '.tar.bz2.gpg')))]
             )
         elif os.path.isdir(os.path.join(
                 simple_remote_path,
-                item)):
+                row[1])):
             subprocess.run(
                 ['rsync', '-r', '-p', '-t', '-E', (
                     os.path.join(
                         simple_remote_path,
-                        item)), (
+                        row[1])), (
                             os.path.join(
                                 simple_remotesafe_path,
-                                item))]
+                                row[1]))]
             )
         elif os.path.isfile(os.path.join(
                 simple_remote_path,
-                item)):
+                row[1])):
             subprocess.run(
                 ['rsync', '-p', '-t', '-E', (os.path.join(
                     simple_remote_path,
-                    item)), (
+                    row[1])), (
                         os.path.join(
                             simple_remotesafe_path,
-                            item))]
+                            row[1]))]
             )
     # Set the paths for remote and satety
     simple_remotesafe_path = (os.path.join(
         back_safe,
-        local_path,
-        back_path))
+        row[8],
+        row[10]))
     subprocess.run(
         ['mkdir', '-p', simple_remotesafe_path]
     )
-    if dolly == "L" or fork == "F":
+    if row[5] == "L" or row[6] == "F":
         simple_remote_path = os.path.join(
             remote_cloud,
-            back_base,
-            local_path,
-            back_path)
+            row[9],
+            row[8],
+            row[10])
         subprocess.run(
             ['mkdir', '-p', simple_remote_path]
         )
@@ -460,22 +466,22 @@ def make_remote_safe_func():
     elif row[2] == "300":
         simple_remote_path = os.path.join(
             remote_cloud,
-            back_base,
+            row[9],
             sysname,
-            local_base,
-            local_path,
-            back_path)
+            row[7],
+            row[8],
+            row[10])
         subprocess.run(
             ['mkdir', '-p', simple_remote_path]
         )
         copy_items_to_safety_func()
-    elif row[2] != "300" and dolly != "L" and fork != "F":
+    elif row[2] != "300" and row[5] != "L" and row[6] != "F":
         simple_remote_path = os.path.join(
             remote_cloud,
-            back_base,
+            row[9],
             sysname,
-            local_path,
-            back_path)        
+            row[8],
+            row[10])        
         subprocess.run(
             ['mkdir', '-p', simple_remote_path]
         )
@@ -484,8 +490,8 @@ def make_remote_safe_func():
 
 # Create tar.bz2 archive of local file
 def create_tar_func():
-    tar = tarfile.open(os.path.join(birdy_work, (item + '.tar.bz2')), 'w:bz2')
-    tar.add(os.path.join(user_home, local_path, item), arcname=item)
+    tar = tarfile.open(os.path.join(birdy_work, (row[1] + '.tar.bz2')), 'w:bz2')
+    tar.add(os.path.join(user_home, row[8], row[1]), arcname=row[1])
     tar.close()
 
 
@@ -494,8 +500,8 @@ def enc_gpg_func():
     subprocess.run(
         ['gpg', '--yes', '-o', (
             os.path.join(birdy_work, (
-                item + '.tar.bz2.gpg'))), '-r', pgp_recip, '--encrypt', (
-                    os.path.join(birdy_work, (item + '.tar.bz2')))])
+                row[1] + '.tar.bz2.gpg'))), '-r', pgp_recip, '--encrypt', (
+                    os.path.join(birdy_work, (row[1] + '.tar.bz2')))])
 
 
 # Move archive to remote directory
@@ -505,33 +511,34 @@ def replace_remote_gpg_func():
     def copy_gpg_to_remote_func():       
         subprocess.run(
             ['rsync', '-r', '-p', '-t', '-E', '--progress', (
-                os.path.join(birdy_work, (item + '.tar.bz2.gpg'))), (
-                    os.path.join(simple_remote_path, (item + '.tar.bz2.gpg')))]
+                os.path.join(birdy_work, (row[1] + '.tar.bz2.gpg'))), (
+                    os.path.join(simple_remote_path, (row[1] + '.tar.bz2.gpg')))]
         )
+
 
     if row[5] == "L" or row[6] == "F":
         simple_remote_path = os.path.join(
             remote_cloud,
-            back_base,
-            local_path,
-            back_path)
+            row[9],
+            row[8],
+            row[10])
         copy_gpg_to_remote_func()
     elif row[2] == "300":
         simple_remote_path = os.path.join(
             remote_cloud,
-            back_base,
+            row[9],
             sysname,
-            local_base,
-            local_path,
-            back_path)
+            row[7],
+            row[8],
+            row[10])
         copy_gpg_to_remote_func()
     else:
         simple_remote_path = os.path.join(
             remote_cloud,
-            back_base,
+            row[9],
             sysname,
-            local_path,
-            back_path)
+            row[8],
+            row[10])
         copy_gpg_to_remote_func()
 
 
@@ -542,24 +549,24 @@ def replace_remote_dir_func():
     def copy_dir_to_remote_func():
         subprocess.run(
             ['rsync', '-r', '-p', '-t', '-E', '--progress', (
-                os.path.join(user_home, local_path, item, '')), (
-                    os.path.join(simple_remote_path, item, ''))]
+                os.path.join(user_home, row[8], row[1], '')), (
+                    os.path.join(simple_remote_path, row[1], ''))]
         )
 
     if row[5] == "L" or row[6] == "F":
         simple_remote_path = os.path.join(
             remote_cloud,
-            back_base,
-            local_path,
-            back_path)
+            row[9],
+            row[8],
+            row[10])
         copy_dir_to_remote_func()
     else:
         simple_remote_path = os.path.join(
             remote_cloud,
-            back_base,
+            row[9],
             sysname,
-            local_path,
-            back_path)
+            row[8],
+            row[10])
         copy_dir_to_remote_func()
 
 
@@ -570,25 +577,44 @@ def replace_remote_file_func():
     def copy_file_to_remote_func():
         subprocess.run(
             ['rsync', '-r', '-p', '-t', '-E', '--progress', (
-                os.path.join(user_home, local_path, item)), (
-                    os.path.join(simple_remote_path, item))]
+                os.path.join(user_home, row[8], row[1])), (
+                    os.path.join(simple_remote_path, row[1]))]
         )
 
     if row[5] == "L" or row[6] == "F":
         simple_remote_path = os.path.join(
             remote_cloud,
-            back_base,
-            local_path,
-            back_path)
+            row[9],
+            row[8],
+            row[10])
         copy_file_to_remote_func()
     else:
         simple_remote_path = os.path.join(
             remote_cloud,
-            back_base,
+            row[9],
             sysname,
-            local_path,
-            back_path)
+            row[8],
+            row[10])
         copy_file_to_remote_func()
+
+
+def runseq_enc_backup_func():
+    print("\nCompressing... ", row[1])
+    create_tar_func()
+    print("Encrypting...")
+    enc_gpg_func()
+    print("Copying...\n")
+    replace_remote_gpg_func()
+
+
+def runseq_dir_backup_func():
+    print("\nCopying... ", row[1])
+    replace_remote_dir_func()
+
+
+def runseq_file_backup_func():
+    print("\nCopying... ", row[1])
+    replace_remote_file_func()
 
 
 # RESTORE FUNCTIONS ----------------------------------------------------------|
@@ -596,40 +622,40 @@ def replace_remote_file_func():
 def make_local_safe_func():
     simple_local_path = os.path.join(
         user_home,
-        local_path)
+        row[8])
     subprocess.run(
         ['mkdir', '-p', simple_local_path]
     )
     simple_localsafe_path = os.path.join(
         local_safe,
-        local_path,
-        back_path)
+        row[8],
+        row[10])
     subprocess.run(
         ['mkdir', '-p', simple_localsafe_path]
     )
     if os.path.isdir(os.path.join(
             simple_local_path,
-            item)):
+            row[1])):
         subprocess.run(
             ['rsync', '-r', '-p', '-t', '-E', (
                 os.path.join(
                     simple_local_path,
-                    item)), (
+                    row[1])), (
                         os.path.join(
                             simple_localsafe_path,
-                            item))]
+                            row[1]))]
         )
     elif os.path.isfile(os.path.join(
             simple_local_path,
-            item)):
+            row[1])):
         subprocess.run(
             ['rsync', '-p', '-t', '-E', (
                 os.path.join(
                     simple_local_path,
-                    item)), (
+                    row[1])), (
                         os.path.join(
                             simple_localsafe_path,
-                            item))]
+                            row[1]))]
         )
 
 
@@ -641,31 +667,40 @@ def dec_gpg_func():
         subprocess.run(
             ['gpg', '--yes', '-o', (
                 os.path.join(
-                    birdy_work, (item + '.tar.bz2'))), '--decrypt', (
+                    birdy_work, (row[1] + '.tar.bz2'))), '--decrypt', (
                         os.path.join(
-                            simple_remote_path, (item + '.tar.bz2.gpg')))]
+                            simple_remote_path, (row[1] + '.tar.bz2.gpg')))]
         )
 
     if row[5] == "L" or row[6] == "F":
         simple_remote_path = os.path.join(
             remote_cloud,
-            back_base,
-            local_path,
-            back_path)
+            row[9],
+            row[8],
+            row[10])
+        run_decryption_func()
+    elif row[2] == "300":
+        simple_remote_path = os.path.join(
+            remote_cloud,
+            row[9],
+            sysname,
+            row[7],
+            row[8],
+            row[10])
         run_decryption_func()
     else:
         simple_remote_path = os.path.join(
             remote_cloud,
-            back_base,
+            row[9],
             sysname,
-            local_path,
-            back_path)
+            row[8],
+            row[10])
         run_decryption_func()
 
 
 # Extract user file from tar.bz2 archive
 def extract_tar_func():
-    tar = tarfile.open(os.path.join(birdy_work, (item + '.tar.bz2')), 'r:bz2')
+    tar = tarfile.open(os.path.join(birdy_work, (row[1] + '.tar.bz2')), 'r:bz2')
     tar.extractall(path=(os.path.join(birdy_work)))
     tar.close()
 
@@ -674,8 +709,8 @@ def extract_tar_func():
 def replace_local_dir_enc_func():
     subprocess.run(
         ['rsync', '-r', '-p', '-t', '-E', '-u', '--delete', '--progress', (
-            os.path.join(birdy_work, item, '')), (
-                os.path.join(user_home, local_path, item, ''))]
+            os.path.join(birdy_work, row[1], '')), (
+                os.path.join(user_home, row[8], row[1], ''))]
     )
 
 
@@ -683,8 +718,8 @@ def replace_local_dir_enc_func():
 def replace_local_file_enc_func():
     subprocess.run(
         ['rsync', '-p', '-t', '-E', '--progress', (
-            os.path.join(birdy_work, item)), (
-                os.path.join(user_home, local_path))]
+            os.path.join(birdy_work, row[1])), (
+                os.path.join(user_home, row[8]))]
     )
 
 
@@ -692,14 +727,14 @@ def replace_local_file_enc_func():
 def replace_local_dir_func():
     simple_remote_path = os.path.join(
         remote_cloud,
-        back_base,
+        row[9],
         sysname,
-        local_path,
-        back_path)
+        row[8],
+        row[10])
     subprocess.run(
         ['rsync', '-r', '-p', '-t', '-E', '-u', '--delete', '--progress', (
-            os.path.join(simple_remote_path, item, '')), (
-                os.path.join(user_home, local_path, item, ''))]
+            os.path.join(simple_remote_path, row[1], '')), (
+                os.path.join(user_home, row[8], row[1], ''))]
     )
 
 
@@ -707,14 +742,14 @@ def replace_local_dir_func():
 def replace_local_file_func():
     simple_remote_path = os.path.join(
         remote_cloud,
-        back_base,
+        row[9],
         sysname,
-        local_path,
-        back_path)
+        row[8],
+        row[10])
     subprocess.run(
         ['rsync', '-r', '-p', '-t', '-E', '-u', '--progress', (
-            os.path.join(simple_remote_path, item)), (
-                os.path.join(user_home, local_path, item))]
+            os.path.join(simple_remote_path, row[1])), (
+                os.path.join(user_home, row[8], row[1]))]
     )
 
 
@@ -732,6 +767,24 @@ def more_choice_func():
         pass
     else:
         exit(0)
+
+
+def runseq_enc_dir_restore_func():
+    print("\nDecrypting... ", row[1])
+    dec_gpg_func()
+    print("\nExpanding...")
+    extract_tar_func()
+    print("\nCopying...\n")
+    replace_local_dir_enc_func()
+
+
+def runseq_enc_file_restore_func():
+    print("\nDecrypting... ", row[1])
+    dec_gpg_func()
+    print("\nExpanding...")
+    extract_tar_func()
+    print("\nCopying... ", row[1])
+    replace_local_file_enc_func()
 
 
 # Let's get started
@@ -807,41 +860,20 @@ if usr_inp in ["B", "b"]:
     else:
         print("")
         for row in system_list_basic:
-            unused_key = row[0]
-            item       = row[1]
-            category   = row[2]
-            dorf       = row[3]
-            enc        = row[4]
-            dolly      = row[5]
-            fork       = row[6]
-            local_base = row[7]
-            local_path = row[8]
-            back_base  = row[9]
-            back_path  = row[10]
-
             make_remote_safe_func()
 
-            if enc == "E" and local_base == "user_home":
-                print("\nCompressing... ", item)
-                create_tar_func()
-                print("Encrypting...")
-                enc_gpg_func()
-                print("Copying...\n")
-                replace_remote_gpg_func()
-            elif enc == "E" and local_base != "user_home":
-                user_home = os.path.join("/", local_base)
-                print("\nCompressing... ", item)
-                create_tar_func()
-                print("Encrypting...")
-                enc_gpg_func()
-                print("Copying...\n")
-                replace_remote_gpg_func()
-            elif enc != "E" and dorf == "D":
-                print("\nCopying... ", item)
-                replace_remote_dir_func()
-            elif enc != "E" and dorf == "f":
-                print("\nCopying... ", item)
-                replace_remote_file_func()
+            if row[4] == "E" and row[7] == "user_home":
+                runseq_enc_backup_func()
+
+            elif row[4] == "E" and row[7] != "user_home":
+                user_home = os.path.join("/", row[7])
+                runseq_enc_backup_func()
+
+            elif row[4] != "E" and row[3] == "D":
+                runseq_dir_backup_func()
+
+            elif row[4] != "E" and row[3] == "f":
+                runseq_file_backup_func()
 
 elif usr_inp in ["I", "i"]:
     print("")
@@ -868,44 +900,23 @@ elif usr_inp in ["I", "i"]:
                 if key == int(backup_choice):
                     for row in system_list_pruned:
                         if value == row[1]:
-                            unused_key = row[0]
-                            item       = row[1]
-                            category   = row[2]
-                            dorf       = row[3]
-                            enc        = row[4]
-                            dolly      = row[5]
-                            fork       = row[6]
-                            local_base = row[7]
-                            local_path = row[8]
-                            back_base  = row[9]
-                            back_path  = row[10]
-
                             make_remote_safe_func()
 
-                            if enc == "E" and local_base == "user_home":
-                                print("\nCompressing... ", item)
-                                create_tar_func()
-                                print("Encrypting...")
-                                enc_gpg_func()
-                                print("Copying...\n")
-                                replace_remote_gpg_func()
+                            if row[4] == "E" and row[7] == "user_home":
+                                runseq_enc_backup_func()
                                 more_choice_func()
-                            elif enc == "E" and local_base != "user_home":
-                                user_home = os.path.join("/", local_base)
-                                print("\nCompressing... ", item)
-                                create_tar_func()
-                                print("Encrypting...")
-                                enc_gpg_func()
-                                print("Copying...\n")
-                                replace_remote_gpg_func()
+
+                            elif row[4] == "E" and row[7] != "user_home":
+                                user_home = os.path.join("/", row[7])
+                                runseq_enc_backup_func()
                                 more_choice_func()
-                            elif enc != "E" and dorf == "D":
-                                print("\nCopying... ", item)
-                                replace_remote_dir_func()
+
+                            elif row[4] != "E" and row[3] == "D":
+                                runseq_dir_backup_func()
                                 more_choice_func()
-                            elif enc != "E" and dorf == "f":
-                                print("\nCopying... ", item)
-                                replace_remote_file_func()
+
+                            elif row[4] != "E" and row[3] == "f":
+                                runseq_file_backup_func()
                                 more_choice_func()
 
 elif usr_inp in ["R", "r"]:
@@ -933,42 +944,47 @@ elif usr_inp in ["R", "r"]:
                 if key == int(backup_choice):
                     for row in system_list_pruned:
                         if value == row[1]:
-                            unused_key = row[0]
-                            item       = row[1]
-                            category   = row[2]
-                            dorf       = row[3]
-                            enc        = row[4]
-                            dolly      = row[5]
-                            fork       = row[6]
-                            local_base = row[7]
-                            local_path = row[8]
-                            back_base  = row[9]
-                            back_path  = row[10]
-
                             make_local_safe_func()
 
-                            if enc == "E" and dorf == "D" and dolly == "x":
-                                print("\nDecrypting... ", item)
-                                dec_gpg_func()
-                                print("\nExpanding...")
-                                extract_tar_func()
-                                print("\nCopying...\n")
-                                replace_local_dir_enc_func()
+                            if (row[4] == "E" and
+                                row[3] == "D" and
+                                row[5] == "x" and
+                                row[7] == "user_home"):
+                                runseq_enc_dir_restore_func()
                                 more_choice_func()
-                            elif enc == "E" and dorf == "f" and dolly == "x":
-                                print("\nDecrypting... ", item)
-                                dec_gpg_func()
-                                print("\nExpanding...")
-                                extract_tar_func()
-                                print("\nCopying... ", item)
-                                replace_local_file_enc_func()
+
+                            elif (row[4] == "E" and
+                                  row[3] == "f" and
+                                  row[5] == "x" and
+                                  row[7] == "user_home"):
+                                runseq_enc_file_restore_func
                                 more_choice_func()
-                            elif enc != "E" and dorf == "D":
-                                print("\nCopying... ", item)
+
+                            elif (row[3] == "D" and
+                                  row[7] != "user_home"):
+                                user_home = os.path.join(
+                                    user_home, "Desktop" + "/"
+                                )
+                                runseq_enc_dir_restore_func()
+                                more_choice_func()
+
+                            elif (row[3] == "f" and
+                                  row[7] != "user_home"):
+                                user_home = os.path.join(
+                                    user_home, "Desktop" + "/"
+                                )
+                                runseq_enc_file_restore_func
+                                more_choice_func()
+
+                            elif (row[4] != "E" and
+                                  row[3] == "D"):
+                                print("\nCopying... ", row[1])
                                 replace_local_dir_func()
                                 more_choice_func()
-                            elif enc != "E" and dorf == "f":
-                                print("\nCopying... ", item)
+
+                            elif (row[4] != "E" and
+                                  row[3] == "f"):
+                                print("\nCopying... ", row[1])
                                 replace_local_file_func()
                                 more_choice_func()
  
@@ -997,27 +1013,10 @@ elif usr_inp in ["D", "d"]:
                 exit(0)
             elif backup_choice in ["Y", "y"]:
                 for row in system_list_pruned:
-                    if row[2] in ["100"]:
-                        unused_key = row[0]
-                        item       = row[1]
-                        category   = row[2]
-                        dorf       = row[3]
-                        enc        = row[4]
-                        dolly      = row[5]
-                        fork       = row[6]
-                        local_base = row[7]
-                        local_path = row[8]
-                        back_base  = row[9]
-                        back_path  = row[10]
-    
+                    if row[2] in ["100"]:    
                         make_remote_safe_func()
-    
-                        print("\nCompressing... ", item)
-                        create_tar_func()
-                        print("Encrypting...")
-                        enc_gpg_func()
-                        print("Copying...\n")
-                        replace_remote_gpg_func()
+
+                        runseq_enc_backup_func()
                 exit(0)
 
     if dolly_choice in ["R", "r"]:
@@ -1043,34 +1042,13 @@ elif usr_inp in ["D", "d"]:
             elif backup_choice in ["Y", "y"]:
                 for row in system_list_pruned:
                     if row[2] in ["100"]:
-                        unused_key = row[0]
-                        item       = row[1]
-                        category   = row[2]
-                        dorf       = row[3]
-                        enc        = row[4]
-                        dolly      = row[5]
-                        fork       = row[6]
-                        local_base = row[7]
-                        local_path = row[8]
-                        back_base  = row[9]
-                        back_path  = row[10]
-
                         make_local_safe_func()
 
-                        if enc == "E" and dorf == "D":
-                            print("\nDecrypting... ", item)
-                            dec_gpg_func()
-                            print("\nExpanding...")
-                            extract_tar_func()
-                            print("\nCopying...\n")
-                            replace_local_dir_enc_func()
-                        elif enc == "E" and dorf == "f":
-                            print("\nDecrypting... ", item)
-                            dec_gpg_func()
-                            print("\nExpanding...")
-                            extract_tar_func()
-                            print("\nCopying... ", item)
-                            replace_local_file_enc_func()
+                        if row[4] == "E" and row[3] == "D":
+                            runseq_enc_dir_restore_func()
+
+                        elif row[4] == "E" and row[3] == "f":
+                            runseq_enc_file_restore_func()
                 exit(0)
 
 elif usr_inp in ["Y", "y"]:
@@ -1105,41 +1083,40 @@ elif usr_inp in ["Y", "y"]:
                 if key == int(backup_choice):
                     for row in system_list_pruned:
                         if value == row[1]:
-                            unused_key = row[0]
-                            item       = row[1]
-                            category   = row[2]
-                            dorf       = row[3]
-                            enc        = row[4]
-                            dolly      = row[5]
-                            fork       = row[6]
-                            local_base = row[7]
-                            local_path = row[8]
-                            back_base  = row[9]
-                            back_path  = row[10]
-
                             make_local_safe_func()
 
-                            if enc == "E" and dorf == "D" and dolly == "x":
-                                print("Decrypting... ", item)
-                                dec_gpg_func()
-                                print("Expanding...")
-                                extract_tar_func()
-                                print("Copying...\n")
-                                replace_local_dir_enc_func()
+                            if (row[4] == "E" and
+                                row[3] == "D" and
+                                row[5] == "x"):
+                                runseq_enc_dir_restore_func()
                                 more_choice_func()
-                            elif enc == "E" and dorf == "f" and dolly == "x":
-                                print("Decrypting... ", item)
-                                dec_gpg_func()
-                                print("Expanding...")
-                                extract_tar_func()
-                                print("Copying... ", item)
-                                replace_local_file_enc_func()
+
+                            elif (row[4] == "E" and
+                                  row[3] == "f" and
+                                  row[5] == "x"):
+                                runseq_enc_file_restore_func()
                                 more_choice_func()
-                            elif enc != "E" and dorf == "D":
-                                print("Copying... ", item)
+
+                            elif (row[3] == "D" and
+                                  row[7] != "user_home"):
+                                user_home = os.path.join(user_home, "Desktop" + "/")
+                                runseq_enc_dir_restore_func()
+                                more_choice_func()
+
+                            elif (row[3] == "f" and
+                                  row[7] != "user_home"):
+                                user_home = os.path.join(user_home, "Desktop" + "/")
+                                runseq_enc_file_restore_func()
+                                more_choice_func()
+
+                            elif (row[4] != "E" and
+                                  row[3] == "D"):
+                                print("Copying... ", row[1])
                                 replace_local_dir_func()
                                 more_choice_func()
-                            elif enc != "E" and dorf == "f":
-                                print("Copying... ", item)
+
+                            elif (row[4] != "E" and
+                                  row[3] == "f"):
+                                print("Copying... ", row[1])
                                 replace_local_file_func()
                                 more_choice_func()
