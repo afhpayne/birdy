@@ -41,7 +41,7 @@ soft_name = "Birdy"
 soft_tag = "a simple program to backup and restore files"
 
 # Version
-soft_vers = "0.5.9"
+soft_vers = "0.6.0"
 
 # Colors
 W = '\033[0m'   # white (normal)
@@ -445,6 +445,8 @@ def make_remote_safe_func():
                             simple_remotesafe_path,
                             row[1]))]
             )
+
+
     # Set the paths for remote and satety
     simple_remotesafe_path = (os.path.join(
         back_safe,
@@ -453,7 +455,8 @@ def make_remote_safe_func():
     subprocess.run(
         ['mkdir', '-p', simple_remotesafe_path]
     )
-    if row[5] == "L" or row[6] == "F":
+    if (row[5] == "L" or
+        row[6] == "F"):
         simple_remote_path = os.path.join(
             remote_cloud,
             row[9],
@@ -475,7 +478,9 @@ def make_remote_safe_func():
             ['mkdir', '-p', simple_remote_path]
         )
         copy_items_to_safety_func()
-    elif row[2] != "300" and row[5] != "L" and row[6] != "F":
+    elif (row[2] != "300" and
+          row[5] != "L" and
+          row[6] != "F"):
         simple_remote_path = os.path.join(
             remote_cloud,
             row[9],
@@ -516,7 +521,8 @@ def replace_remote_gpg_func():
         )
 
 
-    if row[5] == "L" or row[6] == "F":
+    if (row[5] == "L" or
+        row[6] == "F"):
         simple_remote_path = os.path.join(
             remote_cloud,
             row[9],
@@ -581,7 +587,8 @@ def replace_remote_file_func():
                     os.path.join(simple_remote_path, row[1]))]
         )
 
-    if row[5] == "L" or row[6] == "F":
+    if (row[5] == "L" or
+        row[6] == "F"):
         simple_remote_path = os.path.join(
             remote_cloud,
             row[9],
@@ -672,7 +679,8 @@ def dec_gpg_func():
                             simple_remote_path, (row[1] + '.tar.bz2.gpg')))]
         )
 
-    if row[5] == "L" or row[6] == "F":
+    if (row[5] == "L" or
+        row[6] == "F"):
         simple_remote_path = os.path.join(
             remote_cloud,
             row[9],
