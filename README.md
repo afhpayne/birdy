@@ -14,10 +14,13 @@ If you're interested in this project, feel free to reach out.
 - There is a flag to set encryption on or off per file. There's not reason not to encrypt everything, except that it takes a little longer.
 
 ### Release Notes
-0.5.5 bug fixes
-0.5.5 added Nextcloud path
-0.5.4 bug fixes
-0.5.3 bug fixes
-0.5.2 bug fixes
-0.5.1 bug fixes
+0.5.9 refactor <br />
+0.5.8 bug fixes <br />
+0.5.6 bug fixes <br />
+0.5.5 bug fixes <br />
+0.5.5 added Nextcloud path <br />
+0.5.4 bug fixes <br />
+0.5.3 bug fixes <br />
+0.5.2 bug fixes <br />
+0.5.1 bug fixes <br />
 0.5.0 birdy alpha, complete ground-up refactor of original code
