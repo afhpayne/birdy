@@ -2,7 +2,7 @@
 
 # MIT License
 
-# Copyright (c) 2020 afhpayne
+# Copyright (c) 2020-2021 afhpayne
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
