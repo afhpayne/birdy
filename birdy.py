@@ -41,7 +41,7 @@ soft_name = "Birdy"
 soft_tag = "a simple program to backup and restore files"
 
 # Version
-soft_vers = "0.6.0"
+soft_vers = "0.6.1"
 
 # Colors
 W = '\033[0m'   # white (normal)
@@ -871,6 +871,7 @@ if usr_inp in ["B", "b"]:
             make_remote_safe_func()
 
             if row[4] == "E" and row[7] == "user_home":
+                user_home = os.environ['HOME']
                 runseq_enc_backup_func()
 
             elif row[4] == "E" and row[7] != "user_home":
@@ -878,10 +879,13 @@ if usr_inp in ["B", "b"]:
                 runseq_enc_backup_func()
 
             elif row[4] != "E" and row[3] == "D":
+                user_home = os.environ['HOME']
                 runseq_dir_backup_func()
 
             elif row[4] != "E" and row[3] == "f":
+                user_home = os.environ['HOME']
                 runseq_file_backup_func()
+        exit()
 
 elif usr_inp in ["I", "i"]:
     print("")
@@ -911,6 +915,7 @@ elif usr_inp in ["I", "i"]:
                             make_remote_safe_func()
 
                             if row[4] == "E" and row[7] == "user_home":
+                                user_home = os.environ['HOME']
                                 runseq_enc_backup_func()
                                 more_choice_func()
 
@@ -920,10 +925,12 @@ elif usr_inp in ["I", "i"]:
                                 more_choice_func()
 
                             elif row[4] != "E" and row[3] == "D":
+                                user_home = os.environ['HOME']
                                 runseq_dir_backup_func()
                                 more_choice_func()
 
                             elif row[4] != "E" and row[3] == "f":
+                                user_home = os.environ['HOME']
                                 runseq_file_backup_func()
                                 more_choice_func()
 
@@ -971,7 +978,7 @@ elif usr_inp in ["R", "r"]:
                             elif (row[3] == "D" and
                                   row[7] != "user_home"):
                                 user_home = os.path.join(
-                                    user_home, "Desktop" + "/"
+                                    os.environ['HOME'], "Desktop" + "/"
                                 )
                                 runseq_enc_dir_restore_func()
                                 more_choice_func()
@@ -979,7 +986,7 @@ elif usr_inp in ["R", "r"]:
                             elif (row[3] == "f" and
                                   row[7] != "user_home"):
                                 user_home = os.path.join(
-                                    user_home, "Desktop" + "/"
+                                    os.environ['HOME'], "Desktop" + "/"
                                 )
                                 runseq_enc_file_restore_func
                                 more_choice_func()
@@ -1107,24 +1114,26 @@ elif usr_inp in ["Y", "y"]:
 
                             elif (row[3] == "D" and
                                   row[7] != "user_home"):
-                                user_home = os.path.join(user_home, "Desktop" + "/")
+                                user_home = os.path.join(os.environ['HOME'], "Desktop" + "/")
                                 runseq_enc_dir_restore_func()
                                 more_choice_func()
 
                             elif (row[3] == "f" and
                                   row[7] != "user_home"):
-                                user_home = os.path.join(user_home, "Desktop" + "/")
+                                user_home = os.path.join(os.environ['HOME'], "Desktop" + "/")
                                 runseq_enc_file_restore_func()
                                 more_choice_func()
 
                             elif (row[4] != "E" and
                                   row[3] == "D"):
+                                user_home = os.environ['HOME']
                                 print("Copying... ", row[1])
                                 replace_local_dir_func()
                                 more_choice_func()
 
                             elif (row[4] != "E" and
                                   row[3] == "f"):
+                                user_home = os.environ['HOME']
                                 print("Copying... ", row[1])
                                 replace_local_file_func()
                                 more_choice_func()
