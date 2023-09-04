@@ -41,7 +41,7 @@ soft_name = "Birdy"
 soft_tag = "a simple program to backup and restore files"
 
 # Version
-soft_vers = "0.6.1"
+soft_vers = "0.6.2"
 
 # Colors
 W = '\033[0m'   # white (normal)
@@ -63,7 +63,7 @@ global user_home
 user_home = os.environ['HOME']
 
 # Define the backup directories
-remote_nextcloud = os.path.join(os.environ['HOME'], 'Nextcloud/s3_share')
+remote_nextcloud = os.path.join(os.environ['HOME'], 'Nextcloud')
 remote_dropbox = os.path.join(os.environ['HOME'], 'Dropbox')
 remote_cloud = remote_dropbox
 remote_dolly = os.path.join(remote_cloud, 'Linux_Shared', 'dolly_files')
