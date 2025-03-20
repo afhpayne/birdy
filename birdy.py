@@ -2,7 +2,7 @@
 
 # MIT License
 
-# Copyright (c) 2020-2021 afhpayne
+# Copyright (c) 2020-2023 Andrew Payne phalange@komputermatrix.com
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -41,7 +41,7 @@ soft_name = "Birdy"
 soft_tag = "a simple program to backup and restore files"
 
 # Version
-soft_vers = "0.6.2"
+soft_vers = "0.6.4"
 
 # Colors
 W = '\033[0m'   # white (normal)
@@ -709,7 +709,7 @@ def dec_gpg_func():
 # Extract user file from tar.bz2 archive
 def extract_tar_func():
     tar = tarfile.open(os.path.join(birdy_work, (row[1] + '.tar.bz2')), 'r:bz2')
-    tar.extractall(path=(os.path.join(birdy_work)))
+    tar.extractall(filter=tarfile.data_filter,path=(os.path.join(birdy_work)))
     tar.close()
 
 
