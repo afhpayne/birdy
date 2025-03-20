@@ -12,7 +12,7 @@ Birdy is configured through a csv file, which is just a list of every relevant f
 - There is a flag to set encryption on or off per file.
 
 ### Release Notes
-0.6.4 switch from bz2 to gz
+0.6.4 switch from bz2 to gz <br />
 0.6.3 add filter to python tar <br />
 0.5.9 refactor, added full path support for system files <br />
 0.5.8 bug fixes <br />
